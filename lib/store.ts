@@ -1,5 +1,5 @@
 // Cassette storage. With DATABASE_URL set (Vercel + Neon) records live in Postgres; otherwise one
-// JSON file per cassette under DATA_DIR (default ./data). With a Blob read-write token set, photos are
+// JSON file per cassette under DATA_DIR (default ./data). With Vercel Blob connected, photos are
 // moved out of the record into Vercel Blob and the record keeps only their URLs.
 import { promises as fs } from "fs";
 import path from "path";
@@ -76,7 +76,8 @@ async function removeRecord(id: string) {
 const BLOB_TOKEN =
   process.env.BLOB_READ_WRITE_TOKEN ||
   Object.values(process.env).find((v) => v?.startsWith("vercel_blob_rw_"));
-const BLOB = !!BLOB_TOKEN;
+// Newer stores connect through OIDC instead: only BLOB_STORE_ID is set and @vercel/blob signs in by itself.
+const BLOB = !!BLOB_TOKEN || !!process.env.BLOB_STORE_ID;
 const DATA_URL = /^data:image\/(png|jpeg|webp|gif);base64,/;
 
 type Slot = { get: () => string; set: (v: string) => void };
