@@ -111,7 +111,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       className="flex cursor-pointer items-center gap-3 text-sm font-medium"
       onClick={() => onChange(!checked)}
     >
-      <span className={`relative h-6 w-11 shrink-0 rounded-full border-2 border-ink transition ${checked ? "bg-teal" : "bg-white"}`}>
+      <span className={`relative h-6 w-11 shrink-0 rounded-full border-2 border-ink transition ${checked ? "bg-teal" : "bg-field"}`}>
         <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-ink transition-all ${checked ? "left-5" : "left-0.5"}`} />
       </span>
       {label}

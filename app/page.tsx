@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SurfaceView } from "@/components/Surfaces";
 import { MyTapes } from "@/components/MyTapes";
 import { demoCassette } from "@/lib/defaults";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const STEPS = [
   { n: "01", title: "Paste your songs", text: "Drop in YouTube songs or a whole playlist. We grab every track for you." },
@@ -15,11 +16,14 @@ export default function Home() {
     <div className="overflow-x-clip">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <span className="font-display text-2xl">
-          tapie<span className="text-orange">.</span>
+          Tapie<span className="text-orange">.</span>
         </span>
-        <Link href="/create" className="btn btn-ghost btn-sm">
-          Start a tape
-        </Link>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <Link href="/create" className="btn btn-ghost btn-sm">
+            Start a tape
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 px-4 py-10 md:grid-cols-[1.1fr_1fr] md:py-20">

@@ -1,4 +1,4 @@
-# tapie — Developer Guide
+# Tapie — Developer Guide
 
 Technical reference for people working on the tapie codebase: how it is built, how data flows, and how to run, test and deploy it.
 
@@ -12,6 +12,7 @@ Technical reference for people working on the tapie codebase: how it is built, h
 - [8. The vibe engine](#8-the-vibe-engine)
 - [9. Rendering the cassette](#9-rendering-the-cassette)
 - [10. The shared-tape player](#10-the-shared-tape-player)
+- [10a. Themes](#10a-themes)
 - [11. Security model](#11-security-model)
 - [12. Configuration](#12-configuration)
 - [13. Deployment](#13-deployment)
@@ -83,6 +84,7 @@ components/
   SharedTape.tsx          Share page UI
   RetroPlayer.tsx         Walkman-style player (hidden YouTube embed)
   MyTapes.tsx             "Your tapes" list (localStorage)
+  ThemeToggle.tsx         ☾/☀ dark mode + 🎲 random palette buttons
   editor/                 Editor shell + panels (Songs, Tape, Cover, Inside, Stickers, Share, VibeBar)
 lib/
   schema.ts               zod schemas + types (Cassette, Layer, Track, Mood)
@@ -97,6 +99,7 @@ lib/
   rateLimit.ts            In-memory rate limiter + client IP logic
   useYouTube.ts           YouTube IFrame API hook
   client.ts               Browser helpers (ids, image compression, my-tapes, clipboard)
+  theme.ts                Site themes: palettes, apply/save, no-flash boot script
 proxy.ts                  Per-request Content-Security-Policy with nonce
 next.config.ts            Security headers for every response
 ```
@@ -202,6 +205,14 @@ The editor runs this automatically once, when the first songs are added, and onl
 - If playback hasn't started 3 s after Play (some mobile browsers require a tap on the video itself), the video is revealed with a hint.
 - Embed errors (101/150: the owner disabled embedding) skip to the next track.
 - Tape reels spin while playing, and the wound tape follows progress through the current side.
+
+## 10a. Themes
+
+- The UI is coloured through CSS variables (`--color-cream`, `paper`, `ink`, `field`, `shadow`, `dot`, `orange`, `mustard`) defined in `app/globals.css`. Light is the default; `html[data-theme="dark"]` overrides them.
+- **Random theme** picks one of 9 hand-tuned palettes in `lib/theme.ts` (5 light, 4 dark) and sets the same variables inline on `<html>`. Every palette keeps ink-on-paper contrast high.
+- The choice is saved in `localStorage` (`tapie:theme`). A tiny boot script (`THEME_BOOT_SCRIPT`), inlined in `<head>` with the request's CSP nonce, applies it before first paint, so there is no flash. Without a saved choice it follows the OS dark-mode preference.
+- **Shared tapes** render inside `.theme-classic` (pinned variables), so friends see the creator's backdrop and design. The viewer can still switch theme on that page; that only re-themes the page around the cassette, and ↺ restores the original look (`tapie:share-viewer-theme`).
+- The cassette art (`Surfaces.tsx`) and the retro player use fixed colours, never theme variables, so they look identical in every theme.
 
 ## 11. Security model
 

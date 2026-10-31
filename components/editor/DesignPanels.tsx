@@ -200,8 +200,8 @@ export function SharePanel({
               style={{
                 background: SCENE_STYLES[s].bg,
                 color: SCENE_STYLES[s].fg,
-                borderColor: c.scene === s ? "#2b2118" : "transparent",
-                boxShadow: c.scene === s ? "3px 3px 0 #2b2118" : undefined,
+                borderColor: c.scene === s ? "var(--color-ink)" : "transparent",
+                boxShadow: c.scene === s ? "3px 3px 0 var(--color-shadow)" : undefined,
               }}
               onClick={() => setTop({ scene: s })}
             >

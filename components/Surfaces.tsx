@@ -27,7 +27,8 @@ const abs = (left: number, top: number, width: number, height: number): CSSPrope
 // ---------------------------------------------------------------- Tape
 
 function Reel({ cx, wound, spinning, reverse }: { cx: number; wound: number; spinning: boolean; reverse?: boolean }) {
-  const r = 19 + 31 * wound;
+  // Reels sit 140px apart; a full reel (44) stops short of the centre window, an empty one still shows a ring of tape.
+  const r = 23 + 21 * wound;
   return (
     <g>
       <circle cx={cx} cy={52} r={r} fill="#4a2e1c" />
@@ -158,7 +159,7 @@ export function TapeArt({
           <svg width={280} height={104} viewBox="0 0 280 104">
             <Reel cx={70} wound={1 - progress} spinning={spinning} />
             <Reel cx={210} wound={progress} spinning={spinning} />
-            <rect x={118} y={30} width={44} height={44} rx={4} fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.12)" />
+            <rect x={124} y={34} width={32} height={36} rx={4} fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.12)" />
           </svg>
           <div
             style={{
@@ -285,22 +286,25 @@ export function CoverArt({ c }: { c: C }) {
 function MiniTracklist({ tracks, font, ink }: { tracks: Track[]; font: C["inside"]["font"]; ink: string }) {
   const a = tracks.filter((t) => t.side === "A");
   const b = tracks.filter((t) => t.side === "B");
-  const lines = tracks.length + (b.length ? 2 : 1);
-  const size = Math.max(11, Math.min(19, 330 / (lines * 1.3)));
-  const maxLines = Math.floor(330 / (size * 1.3));
+  // Heading rows are a bit taller than song rows; the extra gap above "SIDE B" counts as one more line.
+  const lines = tracks.length + (b.length ? 2.6 : 1.2);
+  // 306px leaves room for the "total" label at the bottom of the card.
+  const size = Math.max(11, Math.min(19, 306 / (lines * 1.4)));
+  const maxLines = Math.floor(306 / (size * 1.4));
   let budget = maxLines - (b.length ? 2 : 1);
   const showA = a.slice(0, Math.max(1, Math.min(a.length, b.length ? Math.ceil(budget / 2) : budget)));
   budget -= showA.length;
   const showB = b.slice(0, Math.max(0, budget));
   const hidden = tracks.length - showA.length - showB.length;
   const row = (t: Track, i: number) => (
-    <div key={t.id} style={{ display: "flex", gap: 6, whiteSpace: "nowrap", overflow: "hidden", lineHeight: 1.3 }}>
-      <span style={{ opacity: 0.6, minWidth: "1.4em" }}>{i + 1}.</span>
-      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</span>
+    <div key={t.id} style={{ display: "flex", gap: 6, whiteSpace: "nowrap", lineHeight: 1.4 }}>
+      <span style={{ opacity: 0.6, minWidth: "1.4em", flexShrink: 0 }}>{i + 1}.</span>
+      {/* Handwriting fonts slant past their box: pad right/bottom so the last letter and descenders aren't clipped. */}
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", minWidth: 0, paddingRight: ".35em", paddingBottom: ".12em" }}>{t.title}</span>
     </div>
   );
-  const head = (s: string) => (
-    <div style={{ fontFamily: FONTS.typewriter.css, fontSize: size * 0.8, letterSpacing: 3, opacity: 0.7, lineHeight: 1.5 }}>{s}</div>
+  const head = (s: string, gap = false) => (
+    <div style={{ fontFamily: FONTS.typewriter.css, fontSize: size * 0.8, letterSpacing: 3, opacity: 0.7, lineHeight: 1.5, marginTop: gap ? size * 0.6 : 0 }}>{s}</div>
   );
   return (
     <div style={{ fontFamily: FONTS[font].css, fontSize: size, color: ink }}>
@@ -308,11 +312,11 @@ function MiniTracklist({ tracks, font, ink }: { tracks: Track[]; font: C["inside
       {showA.map(row)}
       {b.length > 0 && (
         <>
-          {head("SIDE B")}
+          {head("SIDE B", true)}
           {showB.map(row)}
         </>
       )}
-      {hidden > 0 && <div style={{ opacity: 0.6, lineHeight: 1.3 }}>+ {hidden} more…</div>}
+      {hidden > 0 && <div style={{ opacity: 0.6, lineHeight: 1.4 }}>+ {hidden} more…</div>}
     </div>
   );
 }

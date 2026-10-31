@@ -54,7 +54,7 @@ export function StickersPanel({ onAdd, onError }: { onAdd: (l: NewLayer) => void
           {STICKER_KEYS.map((k) => (
             <button
               key={k}
-              className="grid aspect-square place-items-center rounded-xl border-2 border-ink/10 bg-white p-2 transition hover:scale-105 hover:border-ink"
+              className="grid aspect-square place-items-center rounded-xl border-2 border-ink/10 bg-field p-2 transition hover:scale-105 hover:border-ink"
               onClick={() => onAdd({ type: "sticker", value: k, size: STICKER_SIZE[k] ?? 90 })}
               title={k}
             >
@@ -69,7 +69,7 @@ export function StickersPanel({ onAdd, onError }: { onAdd: (l: NewLayer) => void
           {EMOJIS.map((e) => (
             <button
               key={e}
-              className="grid aspect-square place-items-center rounded-xl bg-white text-2xl transition hover:scale-110"
+              className="grid aspect-square place-items-center rounded-xl bg-field text-2xl transition hover:scale-110"
               onClick={() => onAdd({ type: "emoji", value: e, size: 64 })}
             >
               {e}
@@ -98,7 +98,7 @@ export function StickersPanel({ onAdd, onError }: { onAdd: (l: NewLayer) => void
           <Field label="Color">
             <ColorPicker value={color} onChange={setColor} />
           </Field>
-          <div className="mb-4 rounded-xl border-2 border-dashed border-ink/20 bg-white p-3 text-center" style={{ fontFamily: FONTS[font].css, color, fontSize: 24 }}>
+          <div className="mb-4 rounded-xl border-2 border-dashed border-ink/20 bg-field p-3 text-center" style={{ fontFamily: FONTS[font].css, color, fontSize: 24 }}>
             {text || "Preview"}
           </div>
           <button

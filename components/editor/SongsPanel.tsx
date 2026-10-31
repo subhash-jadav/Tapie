@@ -136,7 +136,7 @@ export function SongInput({
       {msg && <p className={`mt-2 text-sm ${msg.ok ? "text-teal" : "text-cherry"}`}>{msg.text}</p>}
 
       {results && results.length > 0 && !link && (
-        <div className="pop-in mt-3 overflow-hidden rounded-xl border-2 border-ink bg-white">
+        <div className="pop-in mt-3 overflow-hidden rounded-xl border-2 border-ink bg-field">
           <div className="flex items-center justify-between border-b-2 border-ink/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-ink/60">
             <span>{searching ? "Searching…" : "Results"}</span>
             <button type="button" className="text-ink/50 hover:text-ink" onClick={() => setResults(null)} aria-label="Close results">
@@ -226,7 +226,7 @@ export function SongsPanel({
             <div className="mb-1.5 font-type text-sm tracking-widest">SIDE {side}</div>
             <ul className="space-y-1.5">
               {list.map((t, i) => (
-                <li key={t.id} className="flex items-center gap-2 rounded-xl border-2 border-ink/15 bg-white p-1.5">
+                <li key={t.id} className="flex items-center gap-2 rounded-xl border-2 border-ink/15 bg-field p-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`https://i.ytimg.com/vi/${t.videoId}/default.jpg`} alt="" className="h-9 w-12 shrink-0 rounded-md object-cover" />
                   <div className="min-w-0 flex-1">

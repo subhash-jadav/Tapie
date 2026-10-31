@@ -1,4 +1,4 @@
-# tapie — Test Cases & Results
+# Tapie — Test Cases & Results
 
 Test plan and results for tapie: functional, screen-size (responsive) and security tests.
 
@@ -7,7 +7,7 @@ Test plan and results for tapie: functional, screen-size (responsive) and securi
 | **Build tested** | Production build (`npm run build && npm start`) with the full security configuration (CSP, headers) |
 | **Date** | 31 Oct 2026 |
 | **Browser** | Microsoft Edge (Chromium) headless, driven via the Chrome DevTools Protocol |
-| **Result** | **Functional 43/43 pass · Screen 240/240 views clean · Security 37/37 pass** |
+| **Result** | **Functional 54/54 pass · Screen 276/276 views clean · Security 37/37 pass** |
 
 Legend: ✅ pass · ❌ fail · 🔧 failed first, bug fixed, re-tested and passing.
 
@@ -90,7 +90,23 @@ Each case was run end-to-end in a real browser against the production build.
 | S-CSP | Content-Security-Policy violations during all flows | none | ✅ (0) |
 | S-JS | JavaScript errors during all flows | none | ✅ (0) |
 
-### 1.7 Vibe engine checks (API level)
+### 1.7 Themes (dark mode & random palettes)
+
+| ID | Test case | Steps | Expected result | Result |
+|---|---|---|---|---|
+| T01 | Dark mode | Home → click ☾ | Whole UI switches to the dark (espresso) theme; button turns into ☀ | ✅ |
+| T02 | Light mode | Click ☀ | Back to the light theme | ✅ |
+| T03 | Random theme | Click 🎲 | A curated palette (e.g. "Sage", "Midnight plum") is applied and its name is shown briefly | ✅ |
+| T04 | Theme is remembered | Pick a theme, reload / open another page | Same theme, no flash of the wrong colours on load | ✅ |
+| T05 | System preference | First visit with the OS in dark mode | Site opens in dark mode | ✅ |
+| T06 | Editor in dark mode | Open the editor with dark theme | Panels, inputs, chips and buttons readable; cassette art unchanged | ✅ |
+| T07 | Shared tape default | Open a share link with any theme set | The creator's backdrop and design are shown | 🔧 |
+| T08 | Theme on shared tape | Share page → ☾ or 🎲 | Page, panels, tracklist and player switch theme; cassette art (cover, tape, inside) stays as designed | ✅ |
+| T09 | Original look | After switching on a share page, click ↺ | Creator's backdrop returns; choice remembered across reloads | ✅ |
+| T10 | Player in dark themes | Share page in a dark theme | Charcoal player with amber screen; all labels readable | 🔧 |
+| T11 | Button contrast | Primary (orange) buttons in every theme | Text readable on the accent colour | 🔧 |
+
+### 1.8 Vibe engine checks (API level)
 
 | ID | Input | Expected | Result |
 |---|---|---|---|
@@ -158,7 +174,18 @@ Screenshots were also reviewed manually for the 320, 360, 390, 768 and 1280 px w
 | R19 | Invalid edit link | ✅ |
 | R20 | 404 page | ✅ |
 
-### 2.3 Responsive bugs found and fixed
+### 2.3 Theme views (phone 360, tablet 768, laptop 1280 × dark, random light, random dark = 9 combinations)
+
+| ID | View | Result |
+|---|---|---|
+| R21 | Home in theme | ✅ |
+| R22 | Create start in theme | ✅ |
+| R23 | Editor in theme | ✅ |
+| R24 | Shared tape (keeps the creator's look) | ✅ |
+
+Totals: 20 views × 12 viewports + 4 views × 9 themed combinations = **276 views**, all clean.
+
+### 2.4 Responsive bugs found and fixed
 
 | # | Found | Where | Fix |
 |---|---|---|---|
@@ -168,6 +195,10 @@ Screenshots were also reviewed manually for the 320, 360, 390, 768 and 1280 px w
 | 4 | Player title cut to "Die With A Sm…" on 320 px | Share page player | Title scrolls (marquee) whenever it doesn't fit, measured on the actual screen |
 | 5 | Search placeholder cut off ("…paste a Yo") on 320 px | Create / Songs | Shorter placeholder "Song name or YouTube link" |
 | 6 | Pamphlet PDF printed in the phone layout over 2 pages | `docs/pamphlet.html` | Mobile breakpoint limited to screens; fits one A4 page |
+| 7 | Full tape reel overlapped the centre window of the cassette; empty reel looked bare and uneven | Tape art, every size | Max reel size reduced so it stops short of the window; empty reel always shows a ring of tape; narrower centre window |
+| 8 | "Remove from your tapes" ✕ was 13 × 24 px | Home, phones/tablets | 32 × 32 px tap area |
+| 9 | In dark themes the player's screen frame turned cream and its label vanished | Share page player | Player keeps its own fixed palette in every theme |
+| 10 | First tap on ☾ on a shared tape switched to light when the device itself was in dark mode | Share page | Toggle follows what the page actually looks like |
 
 ---
 

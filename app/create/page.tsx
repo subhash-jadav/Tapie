@@ -7,6 +7,7 @@ import { Editor, DRAFT_KEY } from "@/components/editor/Editor";
 import { SongInput, mergeTracks, splitSides } from "@/components/editor/SongsPanel";
 import { TapeArt } from "@/components/Surfaces";
 import { Stage } from "@/components/Stage";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Merge a saved draft over defaults so older drafts missing new fields still work.
 function hydrateDraft(raw: string | null): CassetteInput | null {
@@ -64,10 +65,11 @@ export default function CreatePage() {
   if (!started) {
     return (
       <div className="flex min-h-dvh flex-col">
-        <header className="mx-auto w-full max-w-5xl px-4 py-4">
+        <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
           <Link href="/" className="font-display text-2xl">
-            tapie<span className="text-orange">.</span>
+            Tapie<span className="text-orange">.</span>
           </Link>
+          <ThemeToggle />
         </header>
         <main className="mx-auto grid w-full max-w-5xl flex-1 grid-cols-1 items-center gap-10 px-4 pb-16 md:grid-cols-2">
           <div className="pop-in">

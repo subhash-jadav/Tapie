@@ -26,8 +26,9 @@ export function MyTapes() {
               Edit
             </Link>
             <button
-              className="text-ink/40 hover:text-cherry"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 hover:text-cherry"
               title="Remove from this list"
+              aria-label="Remove from this list"
               onClick={() => {
                 forgetTape(t.id);
                 setTapes(getMyTapes());

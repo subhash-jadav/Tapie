@@ -9,6 +9,10 @@ import { FlipCard } from "./FlipCard";
 import { SurfaceView } from "./Surfaces";
 import { RetroPlayer } from "./RetroPlayer";
 import { FONTS } from "@/lib/constants";
+import { ThemeToggle } from "./ThemeToggle";
+
+// Viewer chose their own theme for shared tapes (otherwise the creator's look is shown).
+const VIEWER_THEME_KEY = "tapie:share-viewer-theme";
 
 function Equalizer() {
   return (
@@ -22,7 +26,26 @@ function Equalizer() {
 
 export function SharedTape({ c }: { c: Cassette }) {
   const scene = SCENE_STYLES[c.scene];
-  const dark = scene.fg !== "#2b2118";
+  // By default the page shows the creator's backdrop; the viewer can switch to their own site theme.
+  const [viewer, setViewer] = useState<{ dark: boolean } | null>(null);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(VIEWER_THEME_KEY) === "1") setViewer({ dark: document.documentElement.dataset.theme === "dark" });
+    } catch {}
+  }, []);
+  function applyViewerTheme(isDark: boolean) {
+    setViewer({ dark: isDark });
+    try {
+      localStorage.setItem(VIEWER_THEME_KEY, "1");
+    } catch {}
+  }
+  function originalLook() {
+    setViewer(null);
+    try {
+      localStorage.removeItem(VIEWER_THEME_KEY);
+    } catch {}
+  }
+  const dark = viewer ? viewer.dark : scene.fg !== "#2b2118";
   const order = useMemo(() => [...c.tracks.filter((t) => t.side === "A"), ...c.tracks.filter((t) => t.side === "B")], [c.tracks]);
   const [idx, setIdx] = useState(0);
   const [started, setStarted] = useState(false);
@@ -79,17 +102,38 @@ export function SharedTape({ c }: { c: Cassette }) {
   const progress = sideList.length ? Math.min(1, (Math.max(0, posInSide) + (started ? frac : 0)) / sideList.length) : 0;
   const otherSideFirst = order.findIndex((t) => t.side !== side);
 
-  const panel = dark ? "bg-white/10 border-white/30" : "bg-paper/80 border-ink";
+  const panel = viewer ? "bg-paper/80 border-ink" : dark ? "bg-white/10 border-white/30" : "bg-paper/80 border-ink";
 
   return (
-    <div className="min-h-dvh" style={{ background: scene.bg, color: scene.fg }}>
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <div
+      className={`min-h-dvh transition-colors duration-300 ${viewer ? "" : "theme-classic"}`}
+      style={viewer ? { color: "var(--color-ink)" } : { background: scene.bg, color: scene.fg }}
+    >
+      <header className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-4">
         <Link href="/" className="font-display text-2xl">
-          tapie<span className="text-orange">.</span>
+          Tapie<span className="text-orange">.</span>
         </Link>
-        <Link href="/create" className="btn btn-ghost btn-sm">
-          Make your own
-        </Link>
+        <div className="flex items-center gap-2">
+          {viewer && (
+            <button
+              type="button"
+              className="grid h-8 w-8 place-items-center rounded-full border-2 border-ink bg-paper text-sm"
+              onClick={originalLook}
+              title="Original look (as the creator designed it)"
+              aria-label="Original look"
+            >
+              ↺
+            </button>
+          )}
+          {/* On the shared page these controls are scoped to the page chrome; the cassette art never changes. */}
+          <div className={viewer ? "" : "theme-classic"}>
+            <ThemeToggle onChange={applyViewerTheme} pageDark={dark} />
+          </div>
+          <Link href="/create" className="btn btn-ghost btn-sm">
+            <span className="max-sm:hidden">Make your own</span>
+            <span className="sm:hidden">Make one</span>
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-16">

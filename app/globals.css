@@ -10,6 +10,10 @@
   --color-teal: #2a9d8f;
   --color-denim: #3d5a80;
   --color-brown: #6b4226;
+  /* theme tokens: input fields, offset shadows, background dots */
+  --color-field: #ffffff;
+  --color-shadow: #2b2118;
+  --color-dot: rgba(107, 66, 38, 0.06);
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-display: var(--font-shrikhand), serif;
   --font-hand: var(--font-marker), cursive;
@@ -25,12 +29,40 @@ body {
   min-height: 100dvh;
   background-color: var(--color-cream);
   background-image:
-    radial-gradient(rgba(107, 66, 38, 0.06) 1px, transparent 1.5px),
-    radial-gradient(rgba(107, 66, 38, 0.04) 1px, transparent 1.5px);
+    radial-gradient(var(--color-dot) 1px, transparent 1.5px),
+    radial-gradient(var(--color-dot) 1px, transparent 1.5px);
   background-size: 7px 7px, 11px 11px;
   background-position: 0 0, 3px 5px;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* ---- Themes. Light is the default (@theme above). Random palettes set the same variables inline on <html>. ---- */
+html[data-theme="dark"] {
+  --color-cream: #15110e;
+  --color-paper: #211a15;
+  --color-ink: #efe6d8;
+  --color-field: #2a221c;
+  --color-shadow: #000000;
+  --color-dot: rgba(255, 236, 210, 0.05);
+  --color-orange: #ec8a4b;
+  --color-mustard: #d9a441;
+  color-scheme: dark;
+}
+html[data-theme="light"] { color-scheme: light; }
+
+/* Shared tapes always show the creator's design, whatever theme the viewer uses. */
+.theme-classic {
+  --color-cream: #f4ead5;
+  --color-paper: #fffaf0;
+  --color-ink: #2b2118;
+  --color-field: #ffffff;
+  --color-shadow: #2b2118;
+  --color-dot: rgba(107, 66, 38, 0.06);
+  --color-orange: #e8742c;
+  --color-mustard: #f2b134;
+  color-scheme: light;
 }
 
 @keyframes reel-spin {
@@ -123,23 +155,25 @@ body {
   /* Chunky retro button */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-4 py-2 font-semibold transition select-none;
-    box-shadow: 3px 3px 0 var(--color-ink);
+    box-shadow: 3px 3px 0 var(--color-shadow);
   }
-  .btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--color-ink); }
-  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--color-ink); }
+  .btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--color-shadow); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--color-shadow); }
   .btn:disabled { opacity: 0.5; pointer-events: none; }
-  .btn-primary { @apply bg-orange text-paper; }
+  /* Accent buttons keep light text in every theme (dark themes use a lighter accent). */
+  .btn-primary { @apply bg-orange; color: #fffaf0; }
+  html[data-theme="dark"] .btn-primary { color: #1a120c; }
   .btn-ghost { @apply bg-paper text-ink; }
   .btn-dark { @apply bg-ink text-paper; }
-  .btn-sm { @apply px-2.5 py-1 text-sm rounded-lg; box-shadow: 2px 2px 0 var(--color-ink); }
+  .btn-sm { @apply px-2.5 py-1 text-sm rounded-lg; box-shadow: 2px 2px 0 var(--color-shadow); }
 
   .card {
     @apply rounded-2xl border-2 border-ink bg-paper;
-    box-shadow: 5px 5px 0 var(--color-ink);
+    box-shadow: 5px 5px 0 var(--color-shadow);
   }
 
   .input {
-    @apply w-full rounded-lg border-2 border-ink bg-white px-3 py-2 outline-none transition;
+    @apply w-full rounded-lg border-2 border-ink bg-field px-3 py-2 outline-none transition;
   }
   .input:focus { box-shadow: 0 0 0 3px rgba(232, 116, 44, 0.35); }
 

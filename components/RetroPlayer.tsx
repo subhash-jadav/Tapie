@@ -85,7 +85,7 @@ export function RetroPlayer(p: RetroPlayerProps) {
   const status = !p.ready ? "LOADING" : p.buffering ? "BUFFER" : p.playing ? "▶ PLAY" : p.started ? "❚❚ PAUSE" : "■ STOP";
 
   return (
-    <div className={`device relative mx-auto w-full max-w-md rounded-[28px] border-2 p-4 sm:p-5 ${p.dark ? "device-dark border-black text-paper" : "border-ink text-ink"}`}>
+    <div className={`theme-classic device relative mx-auto w-full max-w-md rounded-[28px] border-2 p-4 sm:p-5 ${p.dark ? "device-dark border-black text-paper" : "border-ink text-ink"}`}>
       <div className="mb-3 flex items-center justify-between px-1 font-type text-[11px] tracking-[.2em] opacity-60">
         <span>TAPIE · MX-90</span>
         <span className="flex items-center gap-1.5">

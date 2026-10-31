@@ -13,6 +13,7 @@ import { VibeBar, type CoverMode } from "./VibeBar";
 import { describeMood, designFromMood, detectVibe, moodForVibe, plainDesign, type Mood, type VibeKey } from "@/lib/vibes";
 import { songArtCover, thumbColors } from "@/lib/thumbs";
 import { defaultCassette } from "@/lib/defaults";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type C = CassetteInput;
 type Panel = "songs" | "tape" | "cover" | "inside" | "stickers" | "share";
@@ -364,13 +365,14 @@ export function Editor({
     <div className="min-h-dvh">
       <header className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
         <Link href="/" className="font-display text-2xl">
-          tapie<span className="text-orange">.</span>
+          Tapie<span className="text-orange">.</span>
         </Link>
         <span className="hidden text-sm text-ink/50 sm:block">{dirty ? "Unsaved changes" : id ? "All changes saved" : ""}</span>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle className="mr-1" />
           {shareUrl && (
-            <a className="btn btn-ghost btn-sm" href={shareUrl} target="_blank" rel="noreferrer">
-              Preview ↗
+            <a className="btn btn-ghost btn-sm" href={shareUrl} target="_blank" rel="noreferrer" aria-label="Preview">
+              <span className="max-sm:hidden">Preview </span>↗
             </a>
           )}
           <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
@@ -489,7 +491,7 @@ export function Editor({
 
       {toast && (
         <div
-          className={`pop-in fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-xl border-2 border-ink px-4 py-2 font-semibold shadow-[3px_3px_0_#2b2118] ${
+          className={`pop-in fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-xl border-2 border-ink px-4 py-2 font-semibold shadow-[3px_3px_0_var(--color-shadow)] ${
             toast.ok ? "bg-teal text-paper" : "bg-paper"
           }`}
         >
