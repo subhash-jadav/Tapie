@@ -3,7 +3,7 @@ import { fontVariables } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mixtape — make a cassette for someone",
+  title: "tapie — make a mixtape for someone",
   description: "Turn your favourite YouTube songs into a custom cassette mixtape and share it with a link.",
 };
 

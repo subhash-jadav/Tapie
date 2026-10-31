@@ -63,7 +63,7 @@ export default function CreatePage() {
       <div className="flex min-h-dvh flex-col">
         <header className="mx-auto w-full max-w-5xl px-4 py-4">
           <Link href="/" className="font-display text-2xl">
-            mixtape<span className="text-orange">.</span>
+            tapie<span className="text-orange">.</span>
           </Link>
         </header>
         <main className="mx-auto grid w-full max-w-5xl flex-1 grid-cols-1 items-center gap-10 px-4 pb-16 md:grid-cols-2">

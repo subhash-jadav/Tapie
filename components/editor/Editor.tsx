@@ -242,7 +242,7 @@ export function Editor({ initial, id: initialId, editKey: initialKey }: { initia
     <div className="min-h-dvh">
       <header className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
         <Link href="/" className="font-display text-2xl">
-          mixtape<span className="text-orange">.</span>
+          tapie<span className="text-orange">.</span>
         </Link>
         <span className="hidden text-sm text-ink/50 sm:block">{dirty ? "Unsaved changes" : id ? "All changes saved" : ""}</span>
         <div className="ml-auto flex gap-2">

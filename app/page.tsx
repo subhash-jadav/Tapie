@@ -15,7 +15,7 @@ export default function Home() {
     <div>
       <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <span className="font-display text-2xl">
-          mixtape<span className="text-orange">.</span>
+          tapie<span className="text-orange">.</span>
         </span>
         <Link href="/create" className="btn btn-ghost btn-sm">
           Start a tape

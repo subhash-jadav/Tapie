@@ -77,7 +77,7 @@ export function SharedTape({ c }: { c: Cassette }) {
     <div className="min-h-dvh" style={{ background: scene.bg, color: scene.fg }}>
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <Link href="/" className="font-display text-2xl">
-          mixtape<span className="text-orange">.</span>
+          tapie<span className="text-orange">.</span>
         </Link>
         <Link href="/create" className="btn btn-ghost btn-sm">
           Make your own

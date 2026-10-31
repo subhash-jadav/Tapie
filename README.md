@@ -1,6 +1,6 @@
-# mixtape.
+# tapie.
 
-Make a custom cassette mixtape from YouTube songs, decorate it, and share it with a link.
+**tapie** lets you make a custom cassette mixtape from YouTube songs, decorate it, and share it with a link.
 
 ## Run it
 
