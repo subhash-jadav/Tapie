@@ -25,7 +25,9 @@ export function parseYouTubeUrl(input: string): { videoId?: string; listId?: str
   const host = url.hostname.replace(/^(www|m|music)\./, "");
   if (host !== "youtube.com" && host !== "youtu.be" && host !== "youtube-nocookie.com") return null;
 
-  const listId = url.searchParams.get("list") || undefined;
+  // YouTube Music shares playlists/albums as /browse/VL<listId>.
+  const browse = url.pathname.match(/^\/browse\/VL([\w-]{10,64})/);
+  const listId = url.searchParams.get("list") || browse?.[1] || undefined;
   let videoId = url.searchParams.get("v") || undefined;
   if (host === "youtu.be") videoId = url.pathname.slice(1).split("/")[0];
   const m = url.pathname.match(/^\/(shorts|embed|live|v)\/([\w-]{11})/);
@@ -82,9 +84,9 @@ function collect(node: unknown, keys: string[], out: [string, Json][]) {
 
 const ITEM_KEYS = ["playlistVideoRenderer", "lockupViewModel", "continuationItemRenderer", "continuationItemViewModel"];
 
-function readItems(data: unknown): { tracks: ImportedTrack[]; continuation?: string } {
+function readItems(data: unknown, keys = ITEM_KEYS): { tracks: ImportedTrack[]; continuation?: string } {
   const found: [string, Json][] = [];
-  collect(data, ITEM_KEYS, found);
+  collect(data, keys, found);
   const tracks: ImportedTrack[] = [];
   let continuation: string | undefined;
   for (const [key, item] of found) {
@@ -96,6 +98,11 @@ function readItems(data: unknown): { tracks: ImportedTrack[]; continuation?: str
       const channel = it.shortBylineText?.runs?.[0]?.text ?? "";
       const d = Number(it.lengthSeconds);
       tracks.push({ videoId: it.videoId, ...splitTitle(rawTitle, channel), duration: d > 0 ? d : undefined });
+    } else if (key === "videoRenderer") {
+      const rawTitle = it.title?.runs?.[0]?.text;
+      if (!VIDEO_ID.test(it.videoId ?? "") || !rawTitle) continue;
+      const channel = it.ownerText?.runs?.[0]?.text ?? it.longBylineText?.runs?.[0]?.text ?? "";
+      tracks.push({ videoId: it.videoId, ...splitTitle(rawTitle, channel), duration: parseDuration(it.lengthText?.simpleText) });
     } else if (key === "lockupViewModel") {
       if (it.contentType && it.contentType !== "LOCKUP_CONTENT_TYPE_VIDEO") continue;
       const meta = it.metadata?.lockupMetadataViewModel;
@@ -185,4 +192,31 @@ export async function importFromYouTube(input: string): Promise<ImportResult> {
   if (!videoId) throw new YouTubeError("YouTube Mixes can't be imported. Try a normal playlist.");
   const track = await fetchVideo(videoId);
   return { kind: "video", title: track.title, tracks: [track] };
+}
+
+const searchCache = new Map<string, { at: number; tracks: ImportedTrack[] }>();
+
+/** Search YouTube videos by text (reads the public results page, no API key). */
+export async function searchYouTube(query: string): Promise<ImportedTrack[]> {
+  const q = query.trim().toLowerCase().replace(/\s+/g, " ");
+  const hit = searchCache.get(q);
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit.tracks;
+
+  // sp=EgIQAQ== limits results to videos (no channels, playlists or shorts shelves).
+  const res = await fetch(`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}&sp=EgIQAQ%253D%253D&hl=en`, {
+    headers: HEADERS,
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) throw new YouTubeError("Search isn't working right now. Try pasting a link.");
+  const m = (await res.text()).match(/var ytInitialData = (\{.*?\});<\/script>/s);
+  if (!m) throw new YouTubeError("Search isn't working right now. Try pasting a link.");
+
+  const seen = new Set<string>();
+  const tracks = readItems(JSON.parse(m[1]), ["videoRenderer", "lockupViewModel"])
+    .tracks.filter((t) => !seen.has(t.videoId) && seen.add(t.videoId))
+    .slice(0, 12);
+
+  searchCache.set(q, { at: Date.now(), tracks });
+  if (searchCache.size > 500) searchCache.delete(searchCache.keys().next().value!);
+  return tracks;
 }

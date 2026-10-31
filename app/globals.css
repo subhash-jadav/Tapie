@@ -60,6 +60,65 @@ body {
 }
 .eq-bar { animation: eq 0.8s ease-in-out infinite alternate; transform-origin: bottom; }
 
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee { display: inline-flex; white-space: nowrap; animation: marquee 12s linear infinite; }
+.marquee > span { padding-right: 3rem; }
+
+/* ---- Retro player ---- */
+.device {
+  background: linear-gradient(160deg, #f8f1e3 0%, #e7dbc3 100%);
+  box-shadow: 6px 6px 0 var(--color-ink), inset 0 2px 0 rgba(255, 255, 255, 0.8), inset 0 -4px 0 rgba(0, 0, 0, 0.08);
+}
+.lcd {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: radial-gradient(ellipse at 30% 0%, #d3e0b4 0%, #b4c592 70%);
+  color: #1f2a17;
+  font-family: var(--font-pixel), monospace;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+  text-shadow: 1px 1px 0 rgba(31, 42, 23, 0.15);
+}
+.lcd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 3px);
+}
+.hw-btn {
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  border: 2px solid var(--color-ink);
+  background: linear-gradient(180deg, #fffaf0, #e6dbc5);
+  color: var(--color-ink);
+  box-shadow: 0 4px 0 var(--color-ink), inset 0 2px 0 #fff;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.hw-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--color-ink), inset 0 2px 4px rgba(0, 0, 0, 0.15); }
+.hw-btn:disabled { opacity: 0.5; pointer-events: none; }
+.hw-btn-primary {
+  background: linear-gradient(180deg, #f39556, #e06a22);
+  color: var(--color-paper);
+  box-shadow: 0 4px 0 var(--color-ink), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+.vol { appearance: none; height: 6px; border-radius: 9999px; background: rgba(43, 33, 24, 0.2); }
+.vol::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-orange); border: 2px solid var(--color-ink); cursor: pointer;
+}
+.vol::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--color-orange); border: 2px solid var(--color-ink); }
+.speaker {
+  background-image: radial-gradient(rgba(43, 33, 24, 0.45) 1.6px, transparent 2px);
+  background-size: 9px 9px;
+  background-position: center;
+  opacity: 0.6;
+}
+
 @layer components {
   /* Chunky retro button */
   .btn {

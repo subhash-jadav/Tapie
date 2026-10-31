@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { defaultCassette } from "@/lib/defaults";
 import type { CassetteInput } from "@/lib/schema";
 import { Editor, DRAFT_KEY } from "@/components/editor/Editor";
-import { LinkInput, mergeTracks, splitSides } from "@/components/editor/SongsPanel";
+import { SongInput, mergeTracks, splitSides } from "@/components/editor/SongsPanel";
 import { TapeArt } from "@/components/Surfaces";
 import { Stage } from "@/components/Stage";
 
@@ -71,9 +71,9 @@ export default function CreatePage() {
             <p className="mb-2 font-type text-sm tracking-widest text-orange">STEP 1 · THE SONGS</p>
             <h1 className="mb-4 font-display text-4xl leading-tight sm:text-5xl">What's on the tape?</h1>
             <p className="mb-6 text-lg text-ink/70">
-              Paste a YouTube song or a whole playlist. You can add more links, reorder and split sides A & B later.
+              Search for a song, or paste a YouTube song or a whole playlist link. You can add more, reorder and split sides A & B later.
             </p>
-            <LinkInput
+            <SongInput
               big
               onImported={(r) => {
                 const res = mergeTracks([], r.tracks);
@@ -86,7 +86,7 @@ export default function CreatePage() {
               }}
             />
             <p className="mt-4 text-sm text-ink/60">
-              Works with youtube.com, youtu.be, YouTube Music and public playlists ·{" "}
+              Works with youtube.com, youtu.be, YouTube Music and public playlists & albums ·{" "}
               <button className="underline" onClick={() => setStarted(true)}>
                 skip, decorate first
               </button>

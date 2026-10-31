@@ -96,5 +96,9 @@ export function useYouTubePlayer(hostRef: RefObject<HTMLDivElement | null>, hand
     play: () => player.current?.playVideo?.(),
     pause: () => player.current?.pauseVideo?.(),
     seek: (s: number) => player.current?.seekTo?.(s, true),
+    setVolume: (v: number) => {
+      player.current?.setVolume?.(v);
+      if (v > 0) player.current?.unMute?.();
+    },
   };
 }

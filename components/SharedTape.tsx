@@ -7,6 +7,7 @@ import { formatTime } from "@/lib/client";
 import { useYouTubePlayer } from "@/lib/useYouTube";
 import { FlipCard } from "./FlipCard";
 import { SurfaceView } from "./Surfaces";
+import { RetroPlayer } from "./RetroPlayer";
 
 function Equalizer() {
   return (
@@ -26,6 +27,8 @@ export function SharedTape({ c }: { c: Cassette }) {
   const [started, setStarted] = useState(false);
   const [caseOpen, setCaseOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showVideo, setShowVideo] = useState(false);
+  const [volume, setVolume] = useState(100);
   const hostRef = useRef<HTMLDivElement>(null);
 
   const yt = useYouTubePlayer(hostRef, {
@@ -59,7 +62,11 @@ export function SharedTape({ c }: { c: Cassette }) {
   // Some mobile browsers block starting playback from outside the video; hint to tap it.
   useEffect(() => {
     if (!started || yt.playing) return;
-    const t = setTimeout(() => !yt.playing && !yt.buffering && setNotice("Tap the video to start playing ▶"), 3000);
+    const t = setTimeout(() => {
+      if (yt.playing || yt.buffering) return;
+      setShowVideo(true);
+      setNotice("Tap the video once to start playing ▶");
+    }, 3000);
     return () => clearTimeout(t);
   }, [started, idx, yt.playing, yt.buffering]);
 
@@ -112,54 +119,34 @@ export function SharedTape({ c }: { c: Cassette }) {
               back={<SurfaceView c={c} surface="tapeB" spinning={yt.playing} progress={side === "B" ? progress : 0} />}
             />
 
-            <div className="mt-5 text-center">
-              <div className="truncate text-lg font-bold">{current?.title ?? "—"}</div>
-              <div className="truncate text-sm opacity-70">
-                {current?.artist} {current && <span>· Side {side}, track {posInSide + 1}</span>}
-              </div>
-            </div>
-
-            {started && yt.time.duration > 0 && (
-              <div className="mt-3 flex items-center gap-2 text-xs tabular-nums opacity-80">
-                <span>{formatTime(yt.time.current) || "0:00"}</span>
-                <input
-                  type="range"
-                  className="flex-1 accent-orange"
-                  min={0}
-                  max={yt.time.duration}
-                  value={yt.time.current}
-                  onChange={(e) => yt.seek(Number(e.target.value))}
-                  aria-label="Seek"
-                />
-                <span>{formatTime(yt.time.duration)}</span>
-              </div>
-            )}
-
-            <div className="mt-4 flex items-center justify-center gap-3">
-              <button className="btn btn-ghost h-12 w-12 !p-0 text-xl" onClick={() => playIndex(Math.max(0, idx - 1))} disabled={!yt.ready} aria-label="Previous">
-                ⏮
-              </button>
-              <button className="btn btn-primary h-16 w-16 !p-0 text-2xl" onClick={toggle} disabled={!yt.ready} aria-label={yt.playing ? "Pause" : "Play"}>
-                {!yt.ready ? "…" : yt.playing ? "❚❚" : "▶"}
-              </button>
-              <button className="btn btn-ghost h-12 w-12 !p-0 text-xl" onClick={() => playIndex(idx + 1)} disabled={!yt.ready || !started} aria-label="Next">
-                ⏭
-              </button>
-              {otherSideFirst >= 0 && (
-                <button className={`btn btn-sm ml-2 ${dark ? "btn-ghost" : "btn-dark"}`} onClick={() => playIndex(otherSideFirst)} disabled={!yt.ready}>
-                  ↻ Side {side === "A" ? "B" : "A"}
-                </button>
-              )}
-            </div>
-            {notice && <p className="pop-in mt-3 text-center text-sm font-semibold">{notice}</p>}
-
-            <div className="relative mx-auto mt-5 aspect-video w-full max-w-sm overflow-hidden rounded-xl border-4 border-ink bg-black shadow-[4px_4px_0_#2b2118]">
-              <div ref={hostRef} className="absolute inset-0" />
-              {!started && (
-                <button className="absolute inset-0 grid place-items-center bg-ink text-paper" onClick={toggle} disabled={!yt.ready}>
-                  <span className="font-type text-sm tracking-widest">{yt.ready ? "▶ PRESS PLAY" : "LOADING…"}</span>
-                </button>
-              )}
+            <div className="mt-6">
+              <RetroPlayer
+                ready={yt.ready}
+                playing={yt.playing}
+                buffering={yt.buffering}
+                started={started}
+                time={started ? yt.time : { current: 0, duration: current?.duration ?? 0 }}
+                title={current?.title ?? ""}
+                artist={current?.artist ?? ""}
+                side={side}
+                trackNo={posInSide + 1}
+                trackCount={sideList.length}
+                hasOtherSide={otherSideFirst >= 0}
+                volume={volume}
+                showVideo={showVideo}
+                notice={notice}
+                hostRef={hostRef}
+                onToggle={toggle}
+                onPrev={() => playIndex(Math.max(0, idx - 1))}
+                onNext={() => playIndex(idx + 1)}
+                onSeek={yt.seek}
+                onFlipSide={() => otherSideFirst >= 0 && playIndex(otherSideFirst)}
+                onVolume={(v) => {
+                  setVolume(v);
+                  yt.setVolume(v);
+                }}
+                onShowVideo={setShowVideo}
+              />
             </div>
           </section>
         </div>
