@@ -13,6 +13,7 @@ Technical reference for people working on the tapie codebase: how it is built, h
 - [9. Rendering the cassette](#9-rendering-the-cassette)
 - [10. The shared-tape player](#10-the-shared-tape-player)
 - [10a. Themes](#10a-themes)
+- [10b. Motion, sound & the create flow](#10b-motion-sound--the-create-flow)
 - [11. Security model](#11-security-model)
 - [12. Configuration](#12-configuration)
 - [13. Deployment](#13-deployment)
@@ -213,6 +214,14 @@ The editor runs this automatically once, when the first songs are added, and onl
 - The choice is saved in `localStorage` (`tapie:theme`). A tiny boot script (`THEME_BOOT_SCRIPT`), inlined in `<head>` with the request's CSP nonce, applies it before first paint, so there is no flash. Without a saved choice it follows the OS dark-mode preference.
 - **Shared tapes** render inside `.theme-classic` (pinned variables), so friends see the creator's backdrop and design. The viewer can still switch theme on that page; that only re-themes the page around the cassette, and ↺ restores the original look (`tapie:share-viewer-theme`).
 - The cassette art (`Surfaces.tsx`) and the retro player use fixed colours, never theme variables, so they look identical in every theme.
+
+## 10b. Motion, sound & the create flow
+
+- **Create flow:** `/create` collects songs first (search or paste, many at once) into a "Your tape" list kept in `localStorage` (`tapie:collect`). **Start designing →** opens the editor. The vibe engine then runs **once**, from all picked songs plus the search words and playlist names, behind a short "reading your songs…" overlay (`components/editor/ReadingSongs.tsx`). After that the design is never restyled automatically.
+- **Auto note:** the design step also writes a short mood-matched note inside the case (`NOTES` in `lib/vibes.ts`), but only when the note is empty or was itself auto-written. A user's own words are never replaced.
+- **Motion** (`lib/motion.ts`, the "Motion" section of `globals.css`): shared easing/timing tokens; View Transitions for the theme change (a circle revealed from the pressed button) and design crossfades; a FLIP helper for reordering songs; animated removal; sticker pop/lift; tab indicator; toast/dialog enter and exit; motor-like reel spin-up/down. Only `transform`/`opacity` are animated, and `prefers-reduced-motion` turns animations off.
+- **Sound** (`lib/sfx.ts`): very quiet sine tones made live with the Web Audio API (no audio files) for add/remove/flip/save/play and "design ready", plus light vibration on phones. Buttons themselves are silent. 🔊/🔇 is stored as `tapie:sound`.
+- **About:** the ⓘ button (`components/AboutButton.tsx`) shows the builder's note and `APP_VERSION` from `lib/constants.ts` (keep it in sync with `package.json`).
 
 ## 11. Security model
 

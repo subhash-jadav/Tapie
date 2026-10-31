@@ -10,9 +10,12 @@ import { mergeTracks, SongsPanel, splitSides, type Imported } from "./SongsPanel
 import { LayerToolbar, StickersPanel, type NewLayer } from "./StickersPanel";
 import { CoverPanel, InsidePanel, LinkBoxes, SharePanel, TapePanel } from "./DesignPanels";
 import { VibeBar, type CoverMode } from "./VibeBar";
-import { describeMood, designFromMood, detectVibe, moodForVibe, plainDesign, type Mood, type VibeKey } from "@/lib/vibes";
+import { describeMood, designFromMood, detectVibe, isAutoNote, moodForVibe, plainDesign, type Mood, type VibeKey } from "@/lib/vibes";
 import { songArtCover, thumbColors } from "@/lib/thumbs";
 import { defaultCassette } from "@/lib/defaults";
+import { animateOut, withTransition } from "@/lib/motion";
+import { sfx } from "@/lib/sfx";
+import { ReadingSongs } from "./ReadingSongs";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 type C = CassetteInput;
@@ -79,6 +82,7 @@ export function Editor({
   const [dirty, setDirty] = useState(!initialId && initial.tracks.length > 0);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [toastLeaving, setToastLeaving] = useState(false);
   const [vibeBusy, setVibeBusy] = useState(false);
   const [dialog, setDialog] = useState(false);
   const autoSplit = useRef(!initialId);
@@ -86,13 +90,18 @@ export function Editor({
 
   const notify = useCallback((text: string, ok = false, action?: Toast["action"]) => {
     setToast({ ok, text, action });
+    setToastLeaving(false);
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), action ? 6000 : 3500);
+    toastTimer.current = setTimeout(() => {
+      setToastLeaving(true); // slide out, then unmount
+      toastTimer.current = setTimeout(() => setToast(null), 230);
+    }, action ? 6000 : 3500);
   }, []);
 
   // The vibe auto-design only runs while the user hasn't styled anything by hand.
   const touched = useRef(!!initialId);
   const pendingVibe = useRef(autoVibe);
+  const [reading, setReading] = useState(autoVibe && initial.tracks.length > 0);
   const hint = useRef(vibeHint);
   // Title/subtitle we generated last time — only those (or empty ones) may be replaced on a restyle.
   const autoText = useRef<{ title?: string; subtitle?: string }>({});
@@ -120,6 +129,7 @@ export function Editor({
   );
 
   const textOptions = (d: C) => ({
+    replaceMessage: !d.message.trim() || isAutoNote(d.message, d.tracks[0]?.title.slice(0, 40)),
     replaceTitle: !d.title.trim() || d.title === autoText.current.title,
     replaceSubtitle: !d.cover.subtitle.trim() || d.cover.subtitle === autoText.current.subtitle,
   });
@@ -140,11 +150,15 @@ export function Editor({
             ? before.mood
             : await guessMood(before.tracks, hint.current, art);
       const seed = Math.floor(Math.random() * 1e9);
-      update((d) => {
-        const next = designFromMood(d, mood, art, seed, textOptions(d));
-        autoText.current = { title: next.title, subtitle: next.cover.subtitle };
-        return next;
-      });
+      // The cassette crossfades from the old design to the new one.
+      withTransition(() =>
+        update((d) => {
+          const next = designFromMood(d, mood, art, seed, textOptions(d));
+          autoText.current = { title: next.title, subtitle: next.cover.subtitle };
+          return next;
+        }),
+      );
+      sfx("chime");
       notify(`✨ Styled: ${describeMood(mood)}`, true, { label: "Undo", run: () => update(() => before) });
     } finally {
       setVibeBusy(false);
@@ -153,7 +167,7 @@ export function Editor({
 
   function makePlain() {
     const before = cRef.current;
-    update((d) => plainDesign(d, defaultCassette(), textOptions(d)));
+    withTransition(() => update((d) => plainDesign(d, defaultCassette(), textOptions(d))));
     notify("Back to the plain design", true, { label: "Undo", run: () => update(() => before) });
   }
 
@@ -178,7 +192,11 @@ export function Editor({
   useEffect(() => {
     if (pendingVibe.current && c.tracks.length) {
       pendingVibe.current = false;
-      applyVibe({ guess: true });
+      const shownAt = Date.now();
+      applyVibe({ guess: true }).finally(() => {
+        // keep the moment on screen long enough to read, then fade it away
+        setTimeout(() => setReading(false), Math.max(700, 1800 - (Date.now() - shownAt)));
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c.tracks.length]);
@@ -198,11 +216,14 @@ export function Editor({
     const layer = { ...nl, id: uid(), x: W / 2 + r(70), y: H / 2 + r(50), rot: nl.type === "text" ? r(4) : r(12) } as Layer;
     setLayers(surface, (ls) => [...ls, layer]);
     setSelected(layer.id);
+    sfx("pop");
   }
 
   function removeLayer(lid: string) {
-    setLayers(surface, (ls) => ls.filter((l) => l.id !== lid));
     setSelected(null);
+    sfx("remove");
+    const el = document.querySelector(`[data-layer-id="${lid}"] > .sticker-lift`);
+    animateOut(el, () => setLayers(surface, (ls) => ls.filter((l) => l.id !== lid)));
   }
 
   function orderLayer(lid: string, dir: 1 | -1) {
@@ -220,6 +241,7 @@ export function Editor({
     const copy = { ...l, id: uid(), x: l.x + 24, y: l.y + 24 } as Layer;
     setLayers(surface, (ls) => [...ls, copy]);
     setSelected(copy.id);
+    sfx("pop");
   }
 
   function goSurface(s: SurfaceKey) {
@@ -236,6 +258,7 @@ export function Editor({
 
   function flip() {
     const other: Record<SurfaceKey, SurfaceKey> = { tapeA: "tapeB", tapeB: "tapeA", cover: "inside", inside: "cover" };
+    sfx("whoosh");
     goSurface(other[surface]);
   }
 
@@ -328,9 +351,11 @@ export function Editor({
           localStorage.removeItem(DRAFT_KEY);
         } catch {}
         window.history.replaceState(null, "", `/edit/${json.id}#${json.editKey}`);
+        sfx("chime");
         setDialog(true);
       } else {
         rememberTape({ id, key: key!, title: payload.title, updatedAt: json.cassette.updatedAt });
+        sfx("thunk");
         notify("Saved ✓", true);
       }
     } catch {
@@ -355,6 +380,7 @@ export function Editor({
       c={c}
       surface={s}
       editable={s === surface}
+      editing
       selectedId={selected}
       onSelect={setSelected}
       onLayerChange={changeLayer}
@@ -437,21 +463,28 @@ export function Editor({
             />
           )}
           <div className="card overflow-hidden">
-            <nav className="grid grid-cols-6 border-b-2 border-ink">
+            <nav className="relative grid grid-cols-6 border-b-2 border-ink">
+              {/* The active-tab highlight slides between tabs. */}
+              <span
+                aria-hidden
+                className="tab-indicator absolute inset-y-0 left-0 w-1/6 bg-ink"
+                style={{ transform: `translateX(${PANELS.findIndex((p) => p.key === panel) * 100}%)` }}
+              />
               {PANELS.map((p) => (
                 <button
                   key={p.key}
-                  className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold transition ${
-                    panel === p.key ? "bg-ink text-paper" : "hover:bg-cream"
+                  className={`relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold transition-colors duration-300 ${
+                    panel === p.key ? "text-paper" : "hover:bg-ink/5"
                   }`}
                   onClick={() => openPanel(p.key)}
+                  aria-current={panel === p.key ? "page" : undefined}
                 >
                   <span className="text-lg leading-none">{p.icon}</span>
                   {p.label}
                 </button>
               ))}
             </nav>
-            <div className="p-4 sm:p-5">
+            <div key={panel} className="panel-in p-4 sm:p-5">
               {panel === "songs" && (
                 <SongsPanel
                   tracks={c.tracks}
@@ -491,7 +524,8 @@ export function Editor({
 
       {toast && (
         <div
-          className={`pop-in fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-xl border-2 border-ink px-4 py-2 font-semibold shadow-[3px_3px_0_var(--color-shadow)] ${
+          data-leaving={toastLeaving}
+          className={`toast fixed bottom-5 left-1/2 z-50 rounded-xl border-2 border-ink px-4 py-2 font-semibold shadow-[3px_3px_0_var(--color-shadow)] ${
             toast.ok ? "bg-teal text-paper" : "bg-paper"
           }`}
         >
@@ -510,8 +544,10 @@ export function Editor({
         </div>
       )}
 
+      {reading && <ReadingSongs tracks={c.tracks} done={!vibeBusy && !pendingVibe.current && !!c.mood} />}
+
       {dialog && shareUrl && editUrl && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 p-4" onClick={() => setDialog(false)}>
+        <div className="fade-in fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-[2px]" onClick={() => setDialog(false)}>
           <div className="card pop-in w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-1 font-display text-3xl">Your mixtape is ready! 📼</h2>
             <p className="mb-5 text-ink/70">Send the share link to your friend. They can flip the case, read your note and play every song.</p>

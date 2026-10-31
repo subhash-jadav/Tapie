@@ -1,5 +1,5 @@
 "use client";
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { FONTS, H, W, type SurfaceKey } from "@/lib/constants";
 import type { CassetteInput, Layer, Track } from "@/lib/schema";
 import { coverBackground, labelBackground, PAPER_STYLES } from "@/lib/patterns";
@@ -26,21 +26,48 @@ const abs = (left: number, top: number, width: number, height: number): CSSPrope
 
 // ---------------------------------------------------------------- Tape
 
-function Reel({ cx, wound, spinning, reverse }: { cx: number; wound: number; spinning: boolean; reverse?: boolean }) {
+/**
+ * Spins a reel like a real motor: it accelerates to speed when playing starts and
+ * coasts to a stop when it pauses, instead of jumping on/off.
+ */
+function useReelSpin(spinning: boolean) {
+  const ref = useRef<SVGGElement>(null);
+  const state = useRef({ angle: 0, speed: 0, raf: 0, last: 0 });
+  useEffect(() => {
+    const st = state.current;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const target = spinning && !reduce ? 200 : 0; // degrees per second at full speed
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - (st.last || now)) / 1000);
+      st.last = now;
+      // ease the speed towards the target (spin-up ~0.6s, wind-down ~0.9s)
+      st.speed += (target - st.speed) * Math.min(1, dt * (target > st.speed ? 4 : 2.6));
+      st.angle = (st.angle + st.speed * dt) % 360;
+      if (ref.current) ref.current.style.transform = `rotate(${st.angle}deg)`;
+      if (Math.abs(st.speed - target) < 0.5 && target === 0) {
+        st.speed = 0;
+        st.raf = 0;
+        st.last = 0;
+        return;
+      }
+      st.raf = requestAnimationFrame(tick);
+    };
+    cancelAnimationFrame(st.raf);
+    st.raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(st.raf);
+  }, [spinning]);
+  return ref;
+}
+
+function Reel({ cx, wound, spinning }: { cx: number; wound: number; spinning: boolean }) {
+  const spin = useReelSpin(spinning);
   // Reels sit 140px apart; a full reel (44) stops short of the centre window, an empty one still shows a ring of tape.
   const r = 23 + 21 * wound;
   return (
     <g>
       <circle cx={cx} cy={52} r={r} fill="#4a2e1c" />
       <circle cx={cx} cy={52} r={r} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth={r > 24 ? 6 : 0} strokeDasharray="1 3" />
-      <g
-        className="reel-spin"
-        style={{
-          transformOrigin: `${cx}px 52px`,
-          animationPlayState: spinning ? "running" : "paused",
-          animationDirection: reverse ? "reverse" : "normal",
-        }}
-      >
+      <g ref={spin} style={{ transformOrigin: `${cx}px 52px`, transformBox: "view-box" }}>
         <circle cx={cx} cy={52} r={17} fill="#f4ead5" stroke="#2b2118" strokeWidth={2} />
         {[0, 60, 120, 180, 240, 300].map((a) => (
           <rect key={a} x={cx - 2.5} y={52 - 11} width={5} height={7} fill="#2b2118" rx={1} transform={`rotate(${a} ${cx} 52)`} />
@@ -321,10 +348,11 @@ function MiniTracklist({ tracks, font, ink }: { tracks: Track[]; font: C["inside
   );
 }
 
-export function InsideArt({ c }: { c: C }) {
+/** `hint` shows a placeholder note while editing; shared tapes never show it. */
+export function InsideArt({ c, hint = false }: { c: C; hint?: boolean }) {
   const ins = c.inside;
   const paper = PAPER_STYLES[ins.paper];
-  const msg = c.message || (c.to || c.from ? "" : "Write a little note here…");
+  const msg = c.message || (hint && !c.to && !c.from ? "Write a little note here…" : "");
   const wide = !ins.showTracklist;
   const boxW = wide ? 560 : 262;
   const msgSize = fitFontSize(msg.length, ins.font, boxW, 260, 13, 34);
@@ -365,6 +393,7 @@ export function SurfaceView({
   progress,
   spinning,
   className,
+  editing,
 }: {
   c: C;
   surface: SurfaceKey;
@@ -375,6 +404,8 @@ export function SurfaceView({
   progress?: number;
   spinning?: boolean;
   className?: string;
+  /** In the editor: show hints like the empty-note placeholder. */
+  editing?: boolean;
 }) {
   return (
     <Stage className={className}>
@@ -383,7 +414,7 @@ export function SurfaceView({
       ) : surface === "cover" ? (
         <CoverArt c={c} />
       ) : (
-        <InsideArt c={c} />
+        <InsideArt c={c} hint={editing} />
       )}
       <div style={{ ...abs(0, 0, W, H), overflow: surface.startsWith("tape") ? "visible" : "hidden", borderRadius: 8 }}>
         <LayerCanvas

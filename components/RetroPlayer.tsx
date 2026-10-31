@@ -154,7 +154,9 @@ export function RetroPlayer(p: RetroPlayerProps) {
           <Svg>{Icon.prev}</Svg>
         </button>
         <button className="hw-btn hw-btn-primary h-16 w-16" onClick={p.onToggle} disabled={!p.ready} aria-label={p.playing ? "Pause" : "Play"}>
-          <Svg size={30}>{p.playing ? Icon.pause : Icon.play}</Svg>
+          <span key={p.playing ? "pause" : "play"} className="pop-in grid place-items-center">
+            <Svg size={30}>{p.playing ? Icon.pause : Icon.play}</Svg>
+          </span>
         </button>
         <button className="hw-btn h-12 w-12" onClick={p.onNext} disabled={!p.ready || !p.started} aria-label="Next">
           <Svg>{Icon.next}</Svg>

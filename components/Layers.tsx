@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useRef, type CSSProperties, type PointerEvent } from "react";
+import { useContext, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { FONTS, H, W } from "@/lib/constants";
 import type { Layer } from "@/lib/schema";
 import { clamp } from "@/lib/client";
@@ -104,6 +104,15 @@ export function LayerCanvas({
   const scale = useContext(StageScale);
   const root = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  // Stickers present on first render don't animate; ones added later pop in.
+  const known = useRef<Set<string> | null>(null);
+  if (!known.current) known.current = new Set(layers.map((l) => l.id));
+  // Remember ids after they've rendered (and had the chance to animate) once.
+  useEffect(() => {
+    const t = setTimeout(() => layers.forEach((l) => known.current!.add(l.id)), 450);
+    return () => clearTimeout(t);
+  }, [layers]);
 
   function startMove(e: PointerEvent<HTMLDivElement>, l: Layer) {
     if (!editable) return;
@@ -111,6 +120,7 @@ export function LayerCanvas({
     onSelect?.(l.id);
     e.currentTarget.setPointerCapture(e.pointerId);
     drag.current = { mode: "move", id: l.id, px: e.clientX, py: e.clientY, x: l.x, y: l.y };
+    setDragging(l.id);
   }
 
   function startTransform(e: PointerEvent<HTMLDivElement>, l: Layer) {
@@ -130,6 +140,7 @@ export function LayerCanvas({
       size: l.size,
       rot: l.rot,
     };
+    setDragging(l.id);
   }
 
   function onMove(e: PointerEvent<HTMLDivElement>) {
@@ -150,7 +161,10 @@ export function LayerCanvas({
     }
   }
 
-  const end = () => (drag.current = null);
+  const end = () => {
+    drag.current = null;
+    setDragging(null);
+  };
   const handle = 26 / scale;
 
   return (
@@ -165,9 +179,11 @@ export function LayerCanvas({
     >
       {layers.map((l) => {
         const selected = editable && l.id === selectedId;
+        const isNew = !known.current!.has(l.id);
         return (
           <div
             key={l.id}
+            data-layer-id={l.id}
             onPointerDown={(e) => startMove(e, l)}
             style={{
               position: "absolute",
@@ -181,7 +197,10 @@ export function LayerCanvas({
               outlineOffset: 4 / scale,
             }}
           >
-            <LayerView layer={l} />
+            {/* Inner wrapper animates (pop / lift) so it never fights the position transform above. */}
+            <div className={`sticker-lift ${isNew ? "sticker-pop" : ""}`} data-dragging={dragging === l.id}>
+              <LayerView layer={l} />
+            </div>
             {selected && (
               <div
                 title="Drag to resize & rotate"

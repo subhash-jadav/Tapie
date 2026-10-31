@@ -335,6 +335,41 @@ const NAME_PHRASES: Record<Bucket, string[]> = {
   old: ["rewind time", "radio days", "golden oldies", "back in the day"],
   bright: ["daydreams", "golden hour", "cloud nine", "soft hours"],
 };
+// Short, sweet notes for the inside of the case. {song} = the first song on the tape.
+const NOTES: Record<Bucket, string[]> = {
+  dark: [
+    "For the long drives home, when the city is asleep and it's just us and the radio. Start with “{song}”.",
+    "Some songs only make sense after midnight. These are mine — and now they're yours.",
+    "Turn the lights down, turn this up. Play it in order, no skipping.",
+  ],
+  tender: [
+    "Every song on here made me think of you. Especially “{song}” — you'll know why.",
+    "I couldn't find the words, so I found these songs instead. ♡",
+    "A little tape for my favourite person. Play it when you miss me.",
+  ],
+  energy: [
+    "Volume up, windows down. No skips allowed — that's the rule.",
+    "Made for dancing badly in the kitchen. Start with “{song}” and don't stop.",
+    "This tape has one job: to make your day louder. You're welcome.",
+  ],
+  calm: [
+    "For slow mornings, rainy windows and staring at the ceiling. Headphones on.",
+    "Put the kettle on, press play, breathe out. “{song}” first.",
+    "Quiet songs for loud days. I hope they feel like a deep breath.",
+  ],
+  old: [
+    "Some songs never get old. Neither do we. Press play and rewind time.",
+    "Straight from the radio days — the good stuff, starting with “{song}”.",
+    "Timeless songs for a timeless person. Turn it up like it's the old days.",
+  ],
+  bright: [
+    "Sunshine in tape form. Play it on a good day, or to make one.",
+    "Songs for staring at the sky. Start with “{song}” and float a little.",
+    "A soft little tape for soft little days. Hope it makes you smile.",
+  ],
+};
+const AUTO_NOTES = new Set(Object.values(NOTES).flat());
+
 const SUBTITLE_ENDS: Record<Bucket, string[]> = {
   dark: ["the long drive home", "after midnight", "dark, slow nights"],
   tender: ["someone special", "you", "the one i think about"],
@@ -363,7 +398,11 @@ function moodBucket(m: Mood): Bucket {
 
 export const VIBE_LAYER_PREFIX = "vibe-";
 
-export type DesignOptions = { replaceTitle: boolean; replaceSubtitle: boolean };
+export type DesignOptions = { replaceTitle: boolean; replaceSubtitle: boolean; replaceMessage?: boolean };
+
+/** True when a note was written by the vibe engine (so a restyle may replace it). */
+export const isAutoNote = (msg: string, firstSong = "") =>
+  [...AUTO_NOTES].some((n) => n.replace("{song}", firstSong) === msg);
 
 /**
  * Generate a full design from a mood and the songs' artwork. Keeps songs, message and the user's own
@@ -500,6 +539,8 @@ export function designFromMood(c: C, mood: Mood, art: ThumbColors | null, seed: 
   const name = words.length && r() < 0.55 ? pick(NAME_TEMPLATES[bucket]).replace("{w}", pick(words)) : pick(NAME_PHRASES[bucket]);
   const n = c.tracks.length;
   const subtitle = `${n} song${n === 1 ? "" : "s"} for ${pick(SUBTITLE_ENDS[bucket])}`;
+  const first = c.tracks[0]?.title.slice(0, 40) ?? "";
+  const note = pick(NOTES[bucket].filter((x) => first || !x.includes("{song}"))).replace("{song}", first);
 
   const keep = (ls: Layer[]) => ls.filter((l) => !l.id.startsWith(VIBE_LAYER_PREFIX));
   return {
@@ -507,6 +548,8 @@ export function designFromMood(c: C, mood: Mood, art: ThumbColors | null, seed: 
     vibe: nearestVibe(m),
     mood: { ...m },
     title: opts.replaceTitle ? name.slice(0, 60) : c.title,
+    // Only fill an empty (or previously auto-written) note — never the user's own words.
+    message: opts.replaceMessage ? note.slice(0, 600) : c.message,
     scene,
     tape: { ...c.tape, shell, shellStyle, label, labelPattern, ink: tapeInk, font: tapeFont },
     cover: {
@@ -537,6 +580,7 @@ export function plainDesign(c: C, base: C, opts: DesignOptions): C {
     vibe: undefined,
     mood: undefined,
     title: opts.replaceTitle ? "" : c.title,
+    message: opts.replaceMessage ? "" : c.message,
     scene: base.scene,
     tape: { ...base.tape, labelA: c.tape.labelA, labelB: c.tape.labelB },
     cover: {

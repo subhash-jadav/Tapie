@@ -10,6 +10,7 @@ import { SurfaceView } from "./Surfaces";
 import { RetroPlayer } from "./RetroPlayer";
 import { FONTS } from "@/lib/constants";
 import { ThemeToggle } from "./ThemeToggle";
+import { sfx } from "@/lib/sfx";
 
 // Viewer chose their own theme for shared tapes (otherwise the creator's look is shown).
 const VIEWER_THEME_KEY = "tapie:share-viewer-theme";
@@ -75,8 +76,14 @@ export function SharedTape({ c }: { c: Cassette }) {
     yt.load(order[i].videoId);
   }
 
+  function flipCase() {
+    sfx("whoosh");
+    setCaseOpen((o) => !o);
+  }
+
   function toggle() {
     if (!yt.ready) return;
+    sfx("tape");
     setNotice(null);
     if (!started) playIndex(idx);
     else if (yt.playing) yt.pause();
@@ -152,11 +159,11 @@ export function SharedTape({ c }: { c: Cassette }) {
         <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2">
           {/* The case */}
           <section>
-            <button className="block w-full cursor-pointer text-left" onClick={() => setCaseOpen((o) => !o)} aria-label="Flip the case">
+            <button className="block w-full cursor-pointer text-left" onClick={flipCase} aria-label="Flip the case">
               <FlipCard flipped={caseOpen} front={<SurfaceView c={c} surface="cover" />} back={<SurfaceView c={c} surface="inside" />} />
             </button>
             <div className="mt-4 flex justify-center">
-              <button className={`btn ${dark ? "btn-ghost" : "btn-dark"}`} onClick={() => setCaseOpen((o) => !o)}>
+              <button className={`btn ${dark ? "btn-ghost" : "btn-dark"}`} onClick={flipCase}>
                 ↻ {caseOpen ? "Close the case" : "Open the case"}
               </button>
             </div>
@@ -192,7 +199,11 @@ export function SharedTape({ c }: { c: Cassette }) {
                 onPrev={() => playIndex(Math.max(0, idx - 1))}
                 onNext={() => playIndex(idx + 1)}
                 onSeek={yt.seek}
-                onFlipSide={() => otherSideFirst >= 0 && playIndex(otherSideFirst)}
+                onFlipSide={() => {
+                  if (otherSideFirst < 0) return;
+                  sfx("whoosh");
+                  playIndex(otherSideFirst);
+                }}
                 onVolume={(v) => {
                   setVolume(v);
                   yt.setVolume(v);

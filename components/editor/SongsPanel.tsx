@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { animateOut, useFlip } from "@/lib/motion";
+import { sfx } from "@/lib/sfx";
 import { LIMITS } from "@/lib/constants";
 import type { Track } from "@/lib/schema";
 import { formatTime, uid } from "@/lib/client";
@@ -100,6 +102,7 @@ export function SongInput({
     try {
       const r = await importLink(q);
       const note = onImported(r);
+      sfx("pop");
       setMsg({ ok: true, text: note || `Added ${r.tracks.length} song${r.tracks.length === 1 ? "" : "s"}` });
       setText("");
     } catch (err) {
@@ -112,6 +115,7 @@ export function SongInput({
   function add(r: Result) {
     onImported({ kind: "video", title: r.title, tracks: [r], query: text.trim() });
     setAdded((a) => new Set(a).add(r.videoId));
+    sfx("pop");
   }
 
   const size = big ? "py-3 text-lg" : "";
@@ -133,7 +137,11 @@ export function SongInput({
           {busy ? "Fetching…" : link ? (big ? "Fetch songs ⏏" : "Add") : searching ? "Searching…" : "Search"}
         </button>
       </div>
-      {msg && <p className={`mt-2 text-sm ${msg.ok ? "text-teal" : "text-cherry"}`}>{msg.text}</p>}
+      {msg && (
+        <p key={msg.text} className={`row-in mt-2 text-sm ${msg.ok ? "text-teal" : "text-cherry"}`}>
+          {msg.text}
+        </p>
+      )}
 
       {results && results.length > 0 && !link && (
         <div className="pop-in mt-3 overflow-hidden rounded-xl border-2 border-ink bg-field">
@@ -144,10 +152,14 @@ export function SongInput({
             </button>
           </div>
           <ul className={`overflow-y-auto ${big ? "max-h-[50dvh]" : "max-h-80"}`}>
-            {results.map((r) => {
+            {results.map((r, i) => {
               const done = added.has(r.videoId) || existing?.has(r.videoId);
               return (
-                <li key={r.videoId} className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-cream/60">
+                <li
+                  key={r.videoId}
+                  className="row-in flex items-center gap-2.5 px-2 py-1.5 transition-colors hover:bg-ink/5"
+                  style={{ animationDelay: `${Math.min(i, 10) * 35}ms` }}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`https://i.ytimg.com/vi/${r.videoId}/default.jpg`} alt="" className="h-10 w-14 shrink-0 rounded-md object-cover" />
                   <div className="min-w-0 flex-1 text-left">
@@ -163,7 +175,9 @@ export function SongInput({
                     disabled={done}
                     onClick={() => add(r)}
                   >
-                    {done ? "✓ Added" : "+ Add"}
+                    <span key={done ? "done" : "add"} className={done ? "pop-in" : ""}>
+                      {done ? "✓ Added" : "+ Add"}
+                    </span>
                   </button>
                 </li>
               );
@@ -186,6 +200,14 @@ export function SongsPanel({
 }) {
   const total = tracks.reduce((s, t) => s + (t.duration ?? 0), 0);
   const sides = (["A", "B"] as const).map((s) => ({ side: s, list: tracks.filter((t) => t.side === s) }));
+
+  const listRef = useRef<HTMLDivElement>(null);
+  useFlip(listRef, [tracks.map((t) => t.id + t.side).join()]);
+
+  function remove(id: string, el: Element | null) {
+    sfx("remove");
+    animateOut(el, () => onChange(tracks.filter((x) => x.id !== id)), { collapse: true });
+  }
 
   const patch = (id: string, p: Partial<Track>) => onChange(tracks.map((t) => (t.id === id ? { ...t, ...p } : t)));
 
@@ -220,13 +242,19 @@ export function SongsPanel({
         </p>
       )}
 
+      <div ref={listRef}>
       {sides.map(({ side, list }) =>
         list.length ? (
           <div key={side} className="mt-4">
             <div className="mb-1.5 font-type text-sm tracking-widest">SIDE {side}</div>
             <ul className="space-y-1.5">
               {list.map((t, i) => (
-                <li key={t.id} className="flex items-center gap-2 rounded-xl border-2 border-ink/15 bg-field p-1.5">
+                <li
+                  key={t.id}
+                  data-flip-id={t.id}
+                  className="row-in flex items-center gap-2 rounded-xl border-2 border-ink/15 bg-field p-1.5"
+                  style={{ animationDelay: `${Math.min(i, 12) * 25}ms` }}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`https://i.ytimg.com/vi/${t.videoId}/default.jpg`} alt="" className="h-9 w-12 shrink-0 rounded-md object-cover" />
                   <div className="min-w-0 flex-1">
@@ -270,7 +298,7 @@ export function SongsPanel({
                     </button>
                     <button
                       className="h-7 w-7 rounded text-cherry hover:bg-cherry/10"
-                      onClick={() => onChange(tracks.filter((x) => x.id !== t.id))}
+                      onClick={(e) => remove(t.id, e.currentTarget.closest("li"))}
                       aria-label="Remove song"
                     >
                       ✕
@@ -282,6 +310,7 @@ export function SongsPanel({
           </div>
         ) : null,
       )}
+      </div>
     </div>
   );
 }

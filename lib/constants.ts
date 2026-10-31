@@ -1,5 +1,7 @@
 // Shared between server (validation) and client (editor/rendering).
 
+export const APP_VERSION = "1.3.0";
+
 export const W = 640;
 export const H = 400;
 
