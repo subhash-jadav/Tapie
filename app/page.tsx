@@ -3,6 +3,7 @@ import { SurfaceView } from "@/components/Surfaces";
 import { MyTapes } from "@/components/MyTapes";
 import { demoCassette } from "@/lib/defaults";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const STEPS = [
   { n: "01", title: "Paste your songs", text: "Drop in YouTube songs or a whole playlist. We grab every track for you." },
@@ -65,6 +66,7 @@ export default function Home() {
       </section>
 
       <MyTapes />
+      <SiteFooter />
     </div>
   );
 }

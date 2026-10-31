@@ -11,6 +11,7 @@ import { SongInput, mergeTracks, splitSides, type Imported } from "@/components/
 import { TapeArt } from "@/components/Surfaces";
 import { Stage } from "@/components/Stage";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SiteFooter } from "@/components/SiteFooter";
 
 // Songs picked on the start screen, kept across reloads until "Start designing".
 const COLLECT_KEY = "tapie:collect";
@@ -212,6 +213,8 @@ export default function CreatePage() {
             </div>
           )}
         </main>
+        {/* Extra room on phones so the pinned button never covers the footer. */}
+        <SiteFooter className={has ? "max-md:pb-24" : ""} />
 
         {/* Phones: the button stays within thumb reach while picking songs. */}
         {has && (

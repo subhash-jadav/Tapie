@@ -17,6 +17,7 @@ import { animateOut, withTransition } from "@/lib/motion";
 import { sfx } from "@/lib/sfx";
 import { ReadingSongs } from "./ReadingSongs";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SiteFooter } from "@/components/SiteFooter";
 
 type C = CassetteInput;
 type Panel = "songs" | "tape" | "cover" | "inside" | "stickers" | "share";
@@ -521,6 +522,7 @@ export function Editor({
           </div>
         </aside>
       </main>
+      <SiteFooter className="-mt-10" />
 
       {toast && (
         <div

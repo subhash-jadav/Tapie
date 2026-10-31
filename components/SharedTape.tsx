@@ -11,6 +11,7 @@ import { RetroPlayer } from "./RetroPlayer";
 import { FONTS } from "@/lib/constants";
 import { ThemeToggle } from "./ThemeToggle";
 import { sfx } from "@/lib/sfx";
+import { SiteFooter } from "@/components/SiteFooter";
 
 // Viewer chose their own theme for shared tapes (otherwise the creator's look is shown).
 const VIEWER_THEME_KEY = "tapie:share-viewer-theme";
@@ -269,6 +270,7 @@ export function SharedTape({ c }: { c: Cassette }) {
           </Link>
         </p>
       </main>
+      <SiteFooter className="-mt-6" />
     </div>
   );
 }

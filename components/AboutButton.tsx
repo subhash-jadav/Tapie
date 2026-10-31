@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { APP_VERSION } from "@/lib/constants";
+import { APP_VERSION, RELEASE_NOTES } from "@/lib/constants";
 
 /** ⓘ button with a small "about Tapie" card: a note from the maker and the version. */
 export function AboutButton() {
@@ -48,7 +48,18 @@ export function AboutButton() {
             A weekend project that got out of hand. Tapie reads the mood of your songs and designs a cassette around them. No
             accounts, no ads, just tapes.
           </p>
-          <p className="mt-3 text-right font-hand text-base">Built with ♡ by Subhash</p>
+          <p className="mt-3 text-right font-hand text-base">Built with ♡ by Shubh</p>
+          <div className="mt-3 border-t-2 border-dashed border-ink/15 pt-3">
+            <p className="font-type text-xs tracking-widest text-orange">WHAT'S NEW IN v{APP_VERSION.replace(/.0$/, "")}</p>
+            <ul className="mt-1.5 space-y-1 text-xs text-ink/75">
+              {RELEASE_NOTES.map((n) => (
+                <li key={n} className="flex gap-1.5">
+                  <span className="text-orange">•</span>
+                  {n}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>
