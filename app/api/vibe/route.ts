@@ -18,7 +18,7 @@ const Body = z.object({
 
 /** Work out a tape's mood from real song data (genre, era, YouTube tags) + its artwork tone. */
 export async function POST(req: Request) {
-  if (!rateLimit(`vibe:${clientIp(req)}`, 30, 10 * 60_000)) {
+  if (!(await rateLimit(`vibe:${clientIp(req)}`, 30, 10 * 60_000))) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
   const parsed = Body.safeParse(await req.json().catch(() => null));

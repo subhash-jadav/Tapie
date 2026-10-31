@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   if (q.length < 2 || q.length > 120) {
     return NextResponse.json({ error: "Type a song name to search." }, { status: 400 });
   }
-  if (!rateLimit(`search:${clientIp(req)}`, 80, 10 * 60_000)) {
+  if (!(await rateLimit(`search:${clientIp(req)}`, 80, 10 * 60_000))) {
     return NextResponse.json({ error: "Too many searches. Try again in a few minutes." }, { status: 429 });
   }
   try {

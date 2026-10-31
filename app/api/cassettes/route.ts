@@ -4,7 +4,7 @@ import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { readCassetteBody } from "./body";
 
 export async function POST(req: Request) {
-  if (!rateLimit(`create:${clientIp(req)}`, 20, 60 * 60_000)) {
+  if (!(await rateLimit(`create:${clientIp(req)}`, 20, 60 * 60_000))) {
     return NextResponse.json({ error: "You've made a lot of tapes! Try again later." }, { status: 429 });
   }
   const body = await readCassetteBody(req);

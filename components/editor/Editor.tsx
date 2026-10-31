@@ -38,6 +38,19 @@ const countImages = (c: C) =>
     .flat()
     .filter((l) => l.type === "image" || l.type === "photo").length + (c.cover.photo ? 1 : 0);
 
+const isPhoto = (l: C["layers"][keyof C["layers"]][number]) => l.type === "image" || l.type === "photo";
+const photosOf = (c: C) => [c.cover.photo, ...Object.values(c.layers).flatMap((ls) => ls.filter(isPhoto).map((l) => l.value as string))];
+
+/** Swaps photos for the stored copies the server returned (e.g. Vercel Blob URLs), keeping everything else. */
+function adoptPhotos(c: C, map: Map<string, string>): C {
+  if (!map.size) return c;
+  const swap = (v: string) => map.get(v) ?? v;
+  const layers = Object.fromEntries(
+    Object.entries(c.layers).map(([k, ls]) => [k, ls.map((l) => (isPhoto(l) ? { ...l, value: swap(l.value as string) } : l))]),
+  ) as C["layers"];
+  return { ...c, cover: { ...c.cover, photo: c.cover.photo && swap(c.cover.photo) }, layers };
+}
+
 type Toast = { ok: boolean; text: string; action?: { label: string; run: () => void } };
 
 /** Ask the server for the songs' mood (genre, era, YouTube tags + artwork tone); fall back to an in-browser guess offline. */
@@ -344,6 +357,11 @@ export function Editor({
       const json = await res.json().catch(() => ({}));
       if (!res.ok) return notify(json.error || "Couldn't save. Try again.");
       setDirty(false);
+      // Photos sent inline come back as stored links; use those so later saves don't resend them.
+      const saved = photosOf(json.cassette);
+      const map = new Map<string, string>();
+      photosOf(payload).forEach((v, i) => v && saved[i] && v !== saved[i] && map.set(v, saved[i]!));
+      setC((cur) => adoptPhotos(cur, map));
       if (!id) {
         setId(json.id);
         setKey(json.editKey);

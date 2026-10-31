@@ -15,7 +15,7 @@ export async function GET(req: Request, ctx: Ctx) {
 
 export async function PUT(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
-  if (!rateLimit(`update:${clientIp(req)}`, 120, 10 * 60_000)) {
+  if (!(await rateLimit(`update:${clientIp(req)}`, 120, 10 * 60_000))) {
     return NextResponse.json({ error: "Saving too often. Wait a moment." }, { status: 429 });
   }
   const key = req.headers.get("x-edit-key") ?? "";
@@ -29,7 +29,7 @@ export async function PUT(req: Request, ctx: Ctx) {
 
 export async function DELETE(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
-  if (!rateLimit(`delete:${clientIp(req)}`, 30, 10 * 60_000)) {
+  if (!(await rateLimit(`delete:${clientIp(req)}`, 30, 10 * 60_000))) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
   const result = await deleteCassette(id, req.headers.get("x-edit-key") ?? "");

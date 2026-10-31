@@ -1,6 +1,6 @@
 // Shared between server (validation) and client (editor/rendering).
 
-export const APP_VERSION = "1.3.1";
+export const APP_VERSION = "1.3.2";
 
 // Shown in the ⓘ About popup — keep it short and update it with every release.
 export const RELEASE_NOTES = [
@@ -20,7 +20,7 @@ export const LIMITS = {
   images: 16,
   message: 600,
   title: 60,
-  bodyBytes: 8_000_000,
+  bodyBytes: 4_400_000, // Vercel's request limit is 4.5 MB
 };
 
 export const FONT_KEYS = [

@@ -3,7 +3,7 @@ import { importFromYouTube, YouTubeError } from "@/lib/youtube";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
-  if (!rateLimit(`yt:${clientIp(req)}`, 40, 10 * 60_000)) {
+  if (!(await rateLimit(`yt:${clientIp(req)}`, 40, 10 * 60_000))) {
     return NextResponse.json({ error: "Too many requests. Try again in a few minutes." }, { status: 429 });
   }
   const body = (await req.json().catch(() => null)) as { url?: unknown } | null;

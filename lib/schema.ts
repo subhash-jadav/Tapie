@@ -18,11 +18,15 @@ const Hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid color");
 const Font = z.enum(FONT_KEYS);
 const LocalId = z.string().regex(/^[\w-]{1,32}$/);
 
-// Images are compressed in the browser and stored inline as data URLs.
+// Images are compressed in the browser and sent as data URLs; once saved on Vercel they are
+// replaced by their Vercel Blob URL.
 export const DataImage = z
   .string()
   .max(1_500_000, "Image too large")
-  .regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/, "Invalid image");
+  .regex(
+    /^(data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+|https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/[\w./-]+)$/,
+    "Invalid image",
+  );
 
 const layerBase = {
   id: LocalId,
