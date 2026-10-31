@@ -91,6 +91,11 @@ export function forgetTape(id: string) {
   } catch {}
 }
 
+/** iPhone/iPad (any browser there is WebKit): pages can mute audio but not change its volume. */
+export function isIOS() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
 export async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);

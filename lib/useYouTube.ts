@@ -98,7 +98,9 @@ export function useYouTubePlayer(hostRef: RefObject<HTMLDivElement | null>, hand
     seek: (s: number) => player.current?.seekTo?.(s, true),
     setVolume: (v: number) => {
       player.current?.setVolume?.(v);
+      // Muting is the only volume change iOS allows a web page, so 0 always mutes.
       if (v > 0) player.current?.unMute?.();
+      else player.current?.mute?.();
     },
   };
 }

@@ -73,6 +73,8 @@ export type RetroPlayerProps = {
   onFlipSide: () => void;
   onVolume: (v: number) => void;
   onShowVideo: (v: boolean) => void;
+  /** iOS: volume is set with the phone's buttons, so show a mute toggle instead of a slider. */
+  muteOnly?: boolean;
   /** Charcoal body + amber screen for dark backdrops. */
   dark?: boolean;
 };
@@ -165,18 +167,32 @@ export function RetroPlayer(p: RetroPlayerProps) {
 
       {/* Volume, side switch, video */}
       <div className="mt-5 flex items-center gap-3">
-        <label className="flex min-w-0 flex-1 items-center gap-2 font-type text-xs tracking-widest opacity-70">
-          VOL
-          <input
-            type="range"
-            className="vol min-w-0 flex-1"
-            min={0}
-            max={100}
-            value={p.volume}
-            onChange={(e) => p.onVolume(Number(e.target.value))}
-            aria-label="Volume"
-          />
-        </label>
+        {p.muteOnly ? (
+          <div className="flex min-w-0 flex-1 items-center gap-2 font-type text-xs tracking-widest">
+            <button
+              type="button"
+              className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 text-sm ${p.dark ? "border-paper/40" : "border-ink bg-paper"}`}
+              onClick={() => p.onVolume(p.volume > 0 ? 0 : 100)}
+              aria-label={p.volume > 0 ? "Mute" : "Unmute"}
+              aria-pressed={p.volume === 0}
+            >
+              {p.volume > 0 ? "🔊" : "🔇"}
+            </button>
+          </div>
+        ) : (
+          <label className="flex min-w-0 flex-1 items-center gap-2 font-type text-xs tracking-widest opacity-70">
+            VOL
+            <input
+              type="range"
+              className="vol min-w-0 flex-1"
+              min={0}
+              max={100}
+              value={p.volume}
+              onChange={(e) => p.onVolume(Number(e.target.value))}
+              aria-label="Volume"
+            />
+          </label>
+        )}
         <div className={`flex shrink-0 overflow-hidden rounded-full border-2 font-type text-xs ${p.dark ? "border-paper/40" : "border-ink"}`} role="group" aria-label="Tape side">
           {(["A", "B"] as const).map((s) => (
             <button

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Cassette, Track } from "@/lib/schema";
 import { SCENE_STYLES } from "@/lib/defaults";
-import { formatTime } from "@/lib/client";
+import { formatTime, isIOS } from "@/lib/client";
 import { useYouTubePlayer } from "@/lib/useYouTube";
 import { FlipCard } from "./FlipCard";
 import { SurfaceView } from "./Surfaces";
@@ -12,6 +12,7 @@ import { FONTS } from "@/lib/constants";
 import { ThemeToggle } from "./ThemeToggle";
 import { sfx } from "@/lib/sfx";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ShareTapeButton } from "./ShareTapeButton";
 
 // Viewer chose their own theme for shared tapes (otherwise the creator's look is shown).
 const VIEWER_THEME_KEY = "tapie:share-viewer-theme";
@@ -55,6 +56,9 @@ export function SharedTape({ c }: { c: Cassette }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [showVideo, setShowVideo] = useState(false);
   const [volume, setVolume] = useState(100);
+  // Checked after mount so the server-rendered page and first client render match.
+  const [ios, setIos] = useState(false);
+  useEffect(() => setIos(isIOS()), []);
   const hostRef = useRef<HTMLDivElement>(null);
 
   const yt = useYouTubePlayer(hostRef, {
@@ -121,7 +125,7 @@ export function SharedTape({ c }: { c: Cassette }) {
         <Link href="/" className="font-display text-2xl">
           Tapie<span className="text-orange">.</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {viewer && (
             <button
               type="button"
@@ -137,7 +141,8 @@ export function SharedTape({ c }: { c: Cassette }) {
           <div className={viewer ? "" : "theme-classic"}>
             <ThemeToggle onChange={applyViewerTheme} pageDark={dark} />
           </div>
-          <Link href="/create" className="btn btn-ghost btn-sm">
+          <ShareTapeButton id={c.id} title={c.title} />
+          <Link href="/create" className="btn btn-ghost btn-sm whitespace-nowrap">
             <span className="max-sm:hidden">Make your own</span>
             <span className="sm:hidden">Make one</span>
           </Link>
@@ -210,6 +215,7 @@ export function SharedTape({ c }: { c: Cassette }) {
                   yt.setVolume(v);
                 }}
                 onShowVideo={setShowVideo}
+                muteOnly={ios}
               />
             </div>
           </section>
@@ -264,11 +270,12 @@ export function SharedTape({ c }: { c: Cassette }) {
           </div>
         </section>
 
-        <p className="mt-10 text-center">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <ShareTapeButton id={c.id} title={c.title} variant="cta" />
           <Link href="/create" className="btn btn-primary">
             Make a mixtape for someone →
           </Link>
-        </p>
+        </div>
       </main>
       <SiteFooter className="-mt-6" />
     </div>
