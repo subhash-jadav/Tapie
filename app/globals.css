@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #f4ead5;
+  --color-paper: #fffaf0;
+  --color-ink: #2b2118;
+  --color-orange: #e8742c;
+  --color-mustard: #f2b134;
+  --color-cherry: #d1495b;
+  --color-teal: #2a9d8f;
+  --color-denim: #3d5a80;
+  --color-brown: #6b4226;
+  --font-sans: var(--font-body), system-ui, sans-serif;
+  --font-display: var(--font-shrikhand), serif;
+  --font-hand: var(--font-marker), cursive;
+  --font-type: var(--font-typewriter), monospace;
+}
+
+html {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(rgba(107, 66, 38, 0.06) 1px, transparent 1.5px),
+    radial-gradient(rgba(107, 66, 38, 0.04) 1px, transparent 1.5px);
+  background-size: 7px 7px, 11px 11px;
+  background-position: 0 0, 3px 5px;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes reel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.reel-spin {
+  animation: reel-spin 1.8s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(-1deg); }
+}
+.float { animation: float 6s ease-in-out infinite; }
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.pop-in { animation: pop-in 0.35s ease-out both; }
+
+@keyframes eq {
+  from { transform: scaleY(0.25); }
+  to { transform: scaleY(1); }
+}
+.eq-bar { animation: eq 0.8s ease-in-out infinite alternate; transform-origin: bottom; }
+
+@layer components {
+  /* Chunky retro button */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-4 py-2 font-semibold transition select-none;
+    box-shadow: 3px 3px 0 var(--color-ink);
+  }
+  .btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--color-ink); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--color-ink); }
+  .btn:disabled { opacity: 0.5; pointer-events: none; }
+  .btn-primary { @apply bg-orange text-paper; }
+  .btn-ghost { @apply bg-paper text-ink; }
+  .btn-dark { @apply bg-ink text-paper; }
+  .btn-sm { @apply px-2.5 py-1 text-sm rounded-lg; box-shadow: 2px 2px 0 var(--color-ink); }
+
+  .card {
+    @apply rounded-2xl border-2 border-ink bg-paper;
+    box-shadow: 5px 5px 0 var(--color-ink);
+  }
+
+  .input {
+    @apply w-full rounded-lg border-2 border-ink bg-white px-3 py-2 outline-none transition;
+  }
+  .input:focus { box-shadow: 0 0 0 3px rgba(232, 116, 44, 0.35); }
+
+  .label { @apply mb-1 block text-xs font-bold uppercase tracking-wider text-ink/70; }
+
+  .chip {
+    @apply rounded-lg border-2 border-ink/20 px-2.5 py-1 text-sm transition;
+  }
+  .chip[data-on="true"] { @apply border-ink bg-ink text-paper; }
+
+  .swatch {
+    @apply h-7 w-7 rounded-full border-2 border-ink/20 transition;
+  }
+  .swatch[data-on="true"] { @apply border-ink scale-110; box-shadow: 0 0 0 2px var(--color-paper), 0 0 0 4px var(--color-ink); }
+}
