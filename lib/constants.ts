@@ -1,13 +1,13 @@
 // Shared between server (validation) and client (editor/rendering).
 
-export const APP_VERSION = "1.3.2";
+export const APP_VERSION = "1.3.3";
 
 // Shown in the ⓘ About popup — keep it short and update it with every release.
 export const RELEASE_NOTES = [
-  "Release notes here & a little signature at the bottom",
+  "Share any tape straight from its page ↗",
+  "Tapes and photos now live in the cloud",
+  "iPhone: a simple mute button (iOS controls volume)",
   "Pick all your songs first, then start designing",
-  "The vibe reads every song you picked",
-  "A little note inside the case, matching the mood",
   "Smoother animations & soft sounds (🔊/🔇)",
 ];
 
