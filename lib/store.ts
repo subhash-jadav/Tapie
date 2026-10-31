@@ -1,5 +1,5 @@
 // Cassette storage. With DATABASE_URL set (Vercel + Neon) records live in Postgres; otherwise one
-// JSON file per cassette under DATA_DIR (default ./data). With BLOB_READ_WRITE_TOKEN set, photos are
+// JSON file per cassette under DATA_DIR (default ./data). With a Blob read-write token set, photos are
 // moved out of the record into Vercel Blob and the record keeps only their URLs.
 import { promises as fs } from "fs";
 import path from "path";
@@ -71,7 +71,12 @@ async function removeRecord(id: string) {
 
 // ---- Photos in Vercel Blob ----
 
-const BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
+// Vercel may add the token under a prefixed name (e.g. TAPIE_READ_WRITE_TOKEN), so also look for any
+// variable holding a Blob read-write token.
+const BLOB_TOKEN =
+  process.env.BLOB_READ_WRITE_TOKEN ||
+  Object.values(process.env).find((v) => v?.startsWith("vercel_blob_rw_"));
+const BLOB = !!BLOB_TOKEN;
 const DATA_URL = /^data:image\/(png|jpeg|webp|gif);base64,/;
 
 type Slot = { get: () => string; set: (v: string) => void };
@@ -104,8 +109,18 @@ async function uploadPhotos(c: CassetteInput) {
         const ext = m[1] === "jpeg" ? "jpg" : m[1];
         uploads.set(
           v,
-          put(`photos/${randomString(12)}.${ext}`, body, { access: "public", contentType: `image/${m[1]}`, addRandomSuffix: true }).then(
+          put(`photos/${randomString(12)}.${ext}`, body, {
+            access: "public",
+            contentType: `image/${m[1]}`,
+            addRandomSuffix: true,
+            token: BLOB_TOKEN,
+          }).then(
             (r) => r.url,
+            (e) => {
+              // Keep the photo inline rather than failing the save.
+              console.error("Blob upload failed:", e);
+              return v;
+            },
           ),
         );
       }
@@ -116,7 +131,7 @@ async function uploadPhotos(c: CassetteInput) {
 
 /** Deletes Blob photos a cassette no longer uses (best effort: a failure only leaves a stray file). */
 async function dropPhotos(urls: string[]) {
-  if (BLOB && urls.length) await del(urls).catch(() => {});
+  if (BLOB && urls.length) await del(urls, { token: BLOB_TOKEN }).catch(() => {});
 }
 
 // Serialize writes per cassette so concurrent saves can't interleave.
