@@ -2,6 +2,17 @@ node_modules/
 .next/
 out/
 data/
-.env*.local
+# secrets / environment files
+.env
+.env.*
+!.env.example
+*.pem
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
 next-env.d.ts
 *.tsbuildinfo
