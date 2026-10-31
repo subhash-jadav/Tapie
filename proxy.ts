@@ -13,7 +13,7 @@ export function proxy(request: NextRequest) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://i.ytimg.com https://*.ytimg.com",
+    "img-src 'self' data: blob: https://i.ytimg.com https://*.ytimg.com https://*.public.blob.vercel-storage.com",
     "font-src 'self'",
     "connect-src 'self'",
     "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
