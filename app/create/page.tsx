@@ -33,6 +33,8 @@ export default function CreatePage() {
   const [restored, setRestored] = useState(false);
   const [started, setStarted] = useState(false);
   const [version, setVersion] = useState(0);
+  const [autoVibe, setAutoVibe] = useState(false);
+  const [vibeHint, setVibeHint] = useState("");
 
   useEffect(() => {
     let draft: CassetteInput | null = null;
@@ -53,6 +55,7 @@ export default function CreatePage() {
     setInitial(defaultCassette());
     setRestored(false);
     setStarted(false);
+    setAutoVibe(false);
     setVersion((v) => v + 1);
   }
 
@@ -82,12 +85,14 @@ export default function CreatePage() {
                   title: r.kind === "playlist" ? r.title.slice(0, 60) : d!.title,
                   tracks: splitSides(res.tracks),
                 }));
+                setVibeHint(r.query ?? (r.kind === "playlist" ? r.title : ""));
+                setAutoVibe(true);
                 setStarted(true);
               }}
             />
             <p className="mt-4 text-sm text-ink/60">
               Works with youtube.com, youtu.be, YouTube Music and public playlists & albums ·{" "}
-              <button className="underline" onClick={() => setStarted(true)}>
+              <button className="-my-2 inline-block py-2 underline" onClick={() => setStarted(true)}>
                 skip, decorate first
               </button>
             </p>
@@ -112,7 +117,7 @@ export default function CreatePage() {
           </button>
         </div>
       )}
-      <Editor key={version} initial={initial} />
+      <Editor key={version} initial={initial} autoVibe={autoVibe} vibeHint={vibeHint} />
     </>
   );
 }

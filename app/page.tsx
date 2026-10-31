@@ -12,7 +12,7 @@ const STEPS = [
 export default function Home() {
   const demo = demoCassette();
   return (
-    <div>
+    <div className="overflow-x-clip">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <span className="font-display text-2xl">
           tapie<span className="text-orange">.</span>
@@ -39,10 +39,10 @@ export default function Home() {
           <p className="mt-4 text-sm text-ink/50">Free · no sign-up · works on your phone</p>
         </div>
         <div className="float relative mx-auto w-full max-w-md">
-          <div className="absolute -left-6 -top-10 w-[85%] rotate-[-8deg] opacity-90">
+          <div className="absolute left-[3%] -top-8 w-[80%] rotate-[-7deg] opacity-90 md:-left-6 md:-top-10 md:w-[85%] md:rotate-[-8deg]">
             <SurfaceView c={demo} surface="cover" />
           </div>
-          <div className="relative mt-24 rotate-[4deg]">
+          <div className="relative mx-auto mt-24 w-[94%] rotate-[4deg] md:w-full">
             <SurfaceView c={demo} surface="tapeA" spinning />
           </div>
         </div>

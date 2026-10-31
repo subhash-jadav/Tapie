@@ -1,6 +1,10 @@
 import type { CSSProperties } from "react";
 import type { CassetteInput } from "./schema";
 
+// Fine film grain as an inline SVG noise texture.
+export const GRAIN =
+  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")";
+
 type Tape = CassetteInput["tape"];
 type Cover = CassetteInput["cover"];
 type Inside = CassetteInput["inside"];
@@ -44,6 +48,11 @@ export function labelBackground(p: Tape["labelPattern"], base: string): CSSPrope
 export function coverBackground(c: Cover): CSSProperties {
   const { bg, accent } = c;
   switch (c.pattern) {
+    case "grain":
+      return {
+        backgroundColor: bg,
+        backgroundImage: `${GRAIN}, radial-gradient(ellipse at 55% 40%, transparent 35%, rgba(0,0,0,.38) 100%)`,
+      };
     case "stripes":
       return { backgroundColor: bg, backgroundImage: `repeating-linear-gradient(90deg, ${accent} 0 26px, transparent 26px 52px)` };
     case "checker":
@@ -83,6 +92,11 @@ export const PAPER_STYLES: Record<Inside["paper"], { label: string; style: CSSPr
       backgroundImage:
         "linear-gradient(90deg, transparent 0 38px, rgba(209,73,91,.45) 38px 40px, transparent 40px), repeating-linear-gradient(to bottom, transparent 0 25px, rgba(61,90,128,.22) 25px 26px)",
     },
+  },
+  ivory: {
+    label: "Ivory",
+    ink: "#2b2118",
+    style: { backgroundColor: "#efe8da", backgroundImage: `${GRAIN}, radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(80,60,40,.18) 100%)` },
   },
   kraft: {
     label: "Kraft",

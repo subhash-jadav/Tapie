@@ -8,6 +8,7 @@ import { useYouTubePlayer } from "@/lib/useYouTube";
 import { FlipCard } from "./FlipCard";
 import { SurfaceView } from "./Surfaces";
 import { RetroPlayer } from "./RetroPlayer";
+import { FONTS } from "@/lib/constants";
 
 function Equalizer() {
   return (
@@ -94,8 +95,14 @@ export function SharedTape({ c }: { c: Cassette }) {
       <main className="mx-auto max-w-6xl px-4 pb-16">
         <div className="pop-in mb-8 text-center">
           <p className="font-type text-sm tracking-widest opacity-70">{c.to ? `A MIXTAPE FOR ${c.to.toUpperCase()}` : "SOMEONE MADE YOU A MIXTAPE"}</p>
-          <h1 className="font-display text-4xl leading-tight sm:text-6xl">{c.title}</h1>
-          {c.from && <p className="mt-1 font-hand text-xl">from {c.from} ♡</p>}
+          <h1 className="text-4xl leading-tight sm:text-6xl" style={{ fontFamily: FONTS[c.cover.font].css }}>
+            {c.title}
+          </h1>
+          {c.from && (
+            <p className="mt-1 text-xl" style={{ fontFamily: FONTS[c.inside.font].css }}>
+              from {c.from} ♡
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2">
@@ -121,6 +128,7 @@ export function SharedTape({ c }: { c: Cassette }) {
 
             <div className="mt-6">
               <RetroPlayer
+                dark={dark}
                 ready={yt.ready}
                 playing={yt.playing}
                 buffering={yt.buffering}
@@ -184,7 +192,7 @@ export function SharedTape({ c }: { c: Cassette }) {
                               href={`https://www.youtube.com/watch?v=${t.videoId}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-xs opacity-50 hover:opacity-100"
+                              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-sm opacity-50 hover:opacity-100"
                               title="Open on YouTube"
                             >
                               ↗

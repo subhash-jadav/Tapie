@@ -22,6 +22,8 @@ export const FONT_KEYS = [
   "gloria",
   "bungee",
   "pacifico",
+  "serif",
+  "classic",
 ] as const;
 export type FontKey = (typeof FONT_KEYS)[number];
 
@@ -36,13 +38,15 @@ export const FONTS: Record<FontKey, { label: string; css: string; width: number 
   gloria: { label: "Doodle", css: "var(--font-gloria)", width: 1.2 },
   bungee: { label: "Block", css: "var(--font-bungee)", width: 1.5 },
   pacifico: { label: "Script", css: "var(--font-pacifico)", width: 1.2 },
+  serif: { label: "Editorial", css: "var(--font-serif)", width: 1.05 },
+  classic: { label: "Classic", css: "var(--font-classic)", width: 0.85 },
 };
 
 export const SHELL_STYLES = ["solid", "clear", "pearl"] as const;
 export const LABEL_PATTERNS = ["plain", "lines", "stripes", "grid", "dots", "retro"] as const;
-export const COVER_PATTERNS = ["plain", "stripes", "checker", "dots", "sunburst", "grid"] as const;
-export const PAPERS = ["lined", "kraft", "grid", "dots", "blush", "midnight"] as const;
-export const SCENES = ["bedroom", "sunset", "night", "cork", "mint"] as const;
+export const COVER_PATTERNS = ["plain", "grain", "stripes", "checker", "dots", "sunburst", "grid"] as const;
+export const PAPERS = ["lined", "ivory", "kraft", "grid", "dots", "blush", "midnight"] as const;
+export const SCENES = ["bedroom", "noir", "sunset", "night", "cork", "mint"] as const;
 export const TEXT_STYLES = ["plain", "tape", "stamp", "bubble"] as const;
 
 export const STICKER_KEYS = [
@@ -82,6 +86,14 @@ export const SURFACE_LABELS: Record<SurfaceKey, string> = {
   tapeB: "Tape · Side B",
   cover: "Case · Cover",
   inside: "Case · Inside",
+};
+
+// Compact labels for phone-width tab rows.
+export const SURFACE_SHORT_LABELS: Record<SurfaceKey, string> = {
+  tapeA: "Side A",
+  tapeB: "Side B",
+  cover: "Cover",
+  inside: "Inside",
 };
 
 export const SWATCHES = [

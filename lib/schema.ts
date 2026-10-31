@@ -10,6 +10,9 @@ import {
   STICKER_KEYS,
   TEXT_STYLES,
 } from "./constants";
+import { FAMILIES, VIBES } from "./vibes";
+
+const Unit = z.number().min(0).max(1);
 
 const Hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid color");
 const Font = z.enum(FONT_KEYS);
@@ -67,6 +70,10 @@ export const CassetteInputSchema = z
     to: z.string().max(40),
     message: z.string().max(LIMITS.message),
     scene: z.enum(SCENES),
+    vibe: z.enum(VIBES).optional(),
+    mood: z
+      .object({ energy: Unit, darkness: Unit, warmth: Unit, age: Unit, tenderness: Unit, family: z.enum(FAMILIES).optional(), year: z.number().int().min(1900).max(2100).optional() })
+      .optional(),
     tape: z.object({
       shell: Hex,
       shellStyle: z.enum(SHELL_STYLES),

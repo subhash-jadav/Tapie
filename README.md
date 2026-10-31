@@ -19,6 +19,7 @@ No API keys or accounts are needed.
 | --- | --- |
 | YouTube import (videos via oEmbed, playlists by reading the public playlist page) | `lib/youtube.ts`, `app/api/youtube` |
 | Song search by name (reads the public results page) | `lib/youtube.ts`, `app/api/youtube/search` |
+| Dynamic vibe engine: each tape gets mood scores (energy, darkness, warmth, era, tenderness) from per-song genre + year (iTunes), YouTube tags and artwork tone — no artist lists. The design (palette from the song art, fonts, textures, labels, name) is generated from that mood; the 9 vibe names only steer it | `lib/vibes.ts`, `lib/songInfo.ts`, `lib/thumbs.ts`, `app/api/vibe`, `components/editor/VibeBar.tsx` |
 | Cassette data + validation (zod) | `lib/schema.ts` |
 | Storage: one JSON file per tape in `./data/cassettes` (set `DATA_DIR` to move it) | `lib/store.ts` |
 | Create / update / delete API (edit protected by a secret key, stored hashed) | `app/api/cassettes` |

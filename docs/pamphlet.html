@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>tapie — make someone a mixtape</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Space+Grotesk:wght@400;600;700&family=Special+Elite&family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #f4ead5; --paper: #fffaf0; --ink: #2b2118; --orange: #e8742c; --mustard: #f2b134;
+    --cherry: #d1495b; --teal: #2a9d8f; --wine: #3a1118;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #d9cfbd; }
+  body { font-family: "Space Grotesk", system-ui, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sheet {
+    width: 210mm; min-height: 297mm; margin: 12mm auto; padding: 12mm 15mm 10mm;
+    background: var(--cream);
+    background-image: radial-gradient(rgba(107,66,38,.07) 1px, transparent 1.5px);
+    background-size: 7px 7px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.25);
+    display: flex; flex-direction: column; gap: 7mm;
+  }
+  @media print { html, body { background: none; } .sheet { margin: 0; box-shadow: none; height: 297mm; overflow: hidden; } }
+  @media screen and (max-width: 820px) { .sheet { width: auto; min-height: 0; margin: 0; padding: 22px 16px; } .hero, .steps, .two { grid-template-columns: 1fr !important; } }
+
+  .kicker { font-family: "Special Elite", monospace; letter-spacing: .2em; font-size: 10pt; color: var(--orange); }
+  h1 { font-family: "Shrikhand", serif; font-weight: 400; font-size: 36pt; line-height: .95; margin: 2mm 0 3mm; }
+  h2 { font-family: "Shrikhand", serif; font-weight: 400; font-size: 18pt; margin: 0 0 3mm; }
+  p { margin: 0 0 2.5mm; font-size: 10.5pt; line-height: 1.5; }
+  .logo { font-family: "Shrikhand", serif; font-size: 20pt; }
+  .logo span { color: var(--orange); }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .pill { font-family: "Special Elite", monospace; font-size: 9pt; border: 1.5px solid var(--ink); border-radius: 99px; padding: 1.5mm 4mm; }
+
+  .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 8mm; align-items: center; }
+  .lede { font-size: 10.5pt; line-height: 1.45; }
+
+  /* cassette illustration */
+  .tape { position: relative; aspect-ratio: 1.6; border-radius: 16px; background: #1a1717; box-shadow: inset 0 2px 0 rgba(255,255,255,.15), 0 14px 26px -12px rgba(0,0,0,.6); transform: rotate(3deg); }
+  .tape .label { position: absolute; inset: 7% 5.5% 34% 5.5%; border-radius: 9px; background: #e9e1d3;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 17px, rgba(0,0,0,.12) 17px 18px); }
+  .tape .side { position: absolute; left: 4%; top: 7%; width: 26px; height: 26px; border-radius: 50%; background: #2a1f1f; color: #e9e1d3; display: grid; place-items: center; font: 700 12pt "Space Grotesk"; }
+  .tape .name { position: absolute; left: 15%; top: 5%; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 19pt; }
+  .tape .window { position: absolute; left: 27%; right: 27%; top: 39%; height: 38%; border-radius: 99px; background: #1c1714; box-shadow: inset 0 0 0 4px rgba(0,0,0,.4), 0 0 0 2px rgba(255,255,255,.3); }
+  .tape .reel { position: absolute; top: 50%; width: 30%; aspect-ratio: 1; border-radius: 50%; transform: translateY(-50%); background: radial-gradient(circle, #f4ead5 0 28%, #2b2118 29% 34%, #4a2e1c 35%); }
+  .tape .reel.l { left: 9%; } .tape .reel.r { right: 9%; }
+  .tape .base { position: absolute; left: 23%; right: 23%; bottom: 0; height: 24%; background: rgba(255,255,255,.06); clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%); }
+  .tape .stamp { position: absolute; right: 6%; bottom: 9%; font-family: "Special Elite"; font-size: 8pt; color: #e9e1d3; border: 1px solid #e9e1d3; padding: 0 2mm; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+  .card { background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; box-shadow: 4px 4px 0 var(--ink); padding: 4mm 5mm; }
+  .num { font-family: "Special Elite", monospace; color: var(--orange); font-size: 11pt; }
+  .card h3 { font-family: "Shrikhand", serif; font-weight: 400; font-size: 14pt; margin: 1mm 0 2mm; }
+  .card p { font-size: 9.5pt; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; }
+  ul { margin: 0; padding-left: 5mm; font-size: 9.5pt; line-height: 1.45; }
+  li { margin-bottom: 1.2mm; }
+  b { font-weight: 700; }
+  .faq dt { font-weight: 700; font-size: 10pt; margin-top: 2mm; }
+  .faq dd { margin: .5mm 0 0; font-size: 9.5pt; line-height: 1.45; }
+
+  .moods { display: flex; flex-wrap: wrap; gap: 2mm; margin-top: 2mm; }
+  .mood { font-size: 8pt; padding: .6mm 2.5mm; border-radius: 99px; border: 1.5px solid var(--ink); background: var(--paper); }
+
+  .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; border-top: 2px dashed rgba(43,33,24,.3); padding-top: 4mm; font-size: 9pt; }
+  .foot .url { font-family: "Special Elite", monospace; font-size: 12pt; background: var(--ink); color: var(--paper); padding: 1.5mm 4mm; border-radius: 8px; }
+</style>
+</head>
+<body>
+<main class="sheet">
+  <div class="top">
+    <div class="logo">tapie<span>.</span></div>
+    <div class="pill">free · no sign-up · works on your phone</div>
+  </div>
+
+  <section class="hero">
+    <div>
+      <div class="kicker">REC ● MIXTAPES, THE OLD WAY</div>
+      <h1>Make someone a&nbsp;mixtape.</h1>
+      <p class="lede">Pick the songs that remind you of someone. tapie turns them into a real-looking cassette, with a case, a cover, a handwritten note inside, and a little retro player. Then send it with one link.</p>
+    </div>
+    <div class="tape" aria-hidden="true">
+      <div class="label"></div>
+      <div class="side">A</div>
+      <div class="name">midnight cinema</div>
+      <div class="window"><div class="reel l"></div><div class="reel r"></div></div>
+      <div class="base"></div>
+      <div class="stamp">SIDE A</div>
+    </div>
+  </section>
+
+  <section class="steps">
+    <div class="card">
+      <div class="num">01</div>
+      <h3>Add your songs</h3>
+      <p>Type a song name and tap <b>+ Add</b>, or paste a YouTube song or a whole playlist link. Reorder them and split them into Side A and Side B.</p>
+    </div>
+    <div class="card">
+      <div class="num">02</div>
+      <h3>Make it yours</h3>
+      <p>tapie reads the mood of your songs and designs the tape for you. Then change anything: colours, cover photo, stickers, polaroids, and a note inside the case.</p>
+    </div>
+    <div class="card">
+      <div class="num">03</div>
+      <h3>Send the link</h3>
+      <p>Tap <b>Save &amp; share</b>. Your friend opens the link, flips the case, reads your note and presses play on the tape, side A to side B.</p>
+    </div>
+  </section>
+
+  <section class="two">
+    <div>
+      <h2>Little tricks</h2>
+      <ul>
+        <li><b>✨ Mood button</b>: see the mood tapie found (like <i>moody · mellow · warm</i>). Tap <b>🎲 Shuffle</b> for a new look in the same mood.</li>
+        <li><b>Steer the mood</b>: want it darker or more romantic? Pick a vibe and the design follows, still in your songs' colours.</li>
+        <li><b>Flip</b> the tape to decorate side B, or flip the case to write your note inside.</li>
+        <li><b>Drag</b> stickers to move them; drag the <b>↻</b> handle to resize and rotate.</li>
+        <li><b>Undo</b> appears after every restyle, in case you liked it better before.</li>
+      </ul>
+      <div class="moods">
+        <span class="mood">🖤 noir</span><span class="mood">🌙 lo-fi</span><span class="mood">🌹 romantic</span><span class="mood">🥀 heartbreak</span><span class="mood">☁️ dreamy</span><span class="mood">🪩 party</span><span class="mood">⚡ rock</span><span class="mood">🎤 hip-hop</span><span class="mood">📻 retro</span>
+      </div>
+    </div>
+    <div class="faq">
+      <h2>Good to know</h2>
+      <dl>
+        <dt>Do I need an account?</dt>
+        <dd>No. When you save, you get a <b>share link</b> for your friend and a <b>secret edit link</b> for you. Keep the edit link safe: anyone who has it can change the tape.</dd>
+        <dt>Can I change it later?</dt>
+        <dd>Yes. Open your edit link, or find it under <b>Your tapes</b> on the tapie home page (same browser).</dd>
+        <dt>Where does the music come from?</dt>
+        <dd>Songs play from YouTube. A few videos don't allow playing outside YouTube; tapie skips those automatically.</dd>
+        <dt>On a phone and it won't start?</dt>
+        <dd>Some phones need one tap on the little video. tapie shows it for you when needed.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>Made with love (and a little tape hiss).</span>
+    <span class="url">tapie — your link here</span>
+  </div>
+</main>
+</body>
+</html>

@@ -1,14 +1,18 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { H, LIMITS, SURFACE_LABELS, W, type SurfaceKey } from "@/lib/constants";
+import { H, LIMITS, SURFACE_LABELS, SURFACE_SHORT_LABELS, W, type SurfaceKey } from "@/lib/constants";
 import type { CassetteInput, Layer } from "@/lib/schema";
 import { clamp, forgetTape, rememberTape, uid } from "@/lib/client";
 import { SurfaceView } from "../Surfaces";
 import { FlipCard } from "../FlipCard";
-import { mergeTracks, SongsPanel, splitSides } from "./SongsPanel";
+import { mergeTracks, SongsPanel, splitSides, type Imported } from "./SongsPanel";
 import { LayerToolbar, StickersPanel, type NewLayer } from "./StickersPanel";
 import { CoverPanel, InsidePanel, LinkBoxes, SharePanel, TapePanel } from "./DesignPanels";
+import { VibeBar, type CoverMode } from "./VibeBar";
+import { describeMood, designFromMood, detectVibe, moodForVibe, plainDesign, type Mood, type VibeKey } from "@/lib/vibes";
+import { songArtCover, thumbColors } from "@/lib/thumbs";
+import { defaultCassette } from "@/lib/defaults";
 
 type C = CassetteInput;
 type Panel = "songs" | "tape" | "cover" | "inside" | "stickers" | "share";
@@ -29,38 +33,154 @@ const countImages = (c: C) =>
     .flat()
     .filter((l) => l.type === "image" || l.type === "photo").length + (c.cover.photo ? 1 : 0);
 
-export function Editor({ initial, id: initialId, editKey: initialKey }: { initial: C; id?: string; editKey?: string }) {
+type Toast = { ok: boolean; text: string; action?: { label: string; run: () => void } };
+
+/** Ask the server for the songs' mood (genre, era, YouTube tags + artwork tone); fall back to an in-browser guess offline. */
+async function guessMood(tracks: C["tracks"], context: string, colors: Awaited<ReturnType<typeof thumbColors>>): Promise<Mood> {
+  try {
+    const res = await fetch("/api/vibe", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        tracks: tracks.map(({ videoId, title, artist }) => ({ videoId, title, artist })),
+        context: context.slice(-400),
+        colors,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (res.ok) return (await res.json()).mood as Mood;
+  } catch {}
+  return detectVibe(tracks, context, colors).mood;
+}
+
+export function Editor({
+  initial,
+  id: initialId,
+  editKey: initialKey,
+  autoVibe = false,
+  vibeHint = "",
+}: {
+  initial: C;
+  id?: string;
+  editKey?: string;
+  /** Style the tape automatically from its songs once they're in. */
+  autoVibe?: boolean;
+  /** Search words / playlist names already used, to help guess the vibe. */
+  vibeHint?: string;
+}) {
   const [c, setC] = useState<C>(initial);
   const [id, setId] = useState(initialId);
   const [key, setKey] = useState(initialKey);
   const [surface, setSurface] = useState<SurfaceKey>("tapeA");
   const [selected, setSelected] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(initial.tracks.length ? "tape" : "songs");
-  const [dirty, setDirty] = useState(false);
+  // A new tape that already has songs is unsaved work from the start (keep a draft, warn on leave).
+  const [dirty, setDirty] = useState(!initialId && initial.tracks.length > 0);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [vibeBusy, setVibeBusy] = useState(false);
   const [dialog, setDialog] = useState(false);
   const autoSplit = useRef(!initialId);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const notify = useCallback((text: string, ok = false) => {
-    setToast({ ok, text });
+  const notify = useCallback((text: string, ok = false, action?: Toast["action"]) => {
+    setToast({ ok, text, action });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 3500);
+    toastTimer.current = setTimeout(() => setToast(null), action ? 6000 : 3500);
   }, []);
+
+  // The vibe auto-design only runs while the user hasn't styled anything by hand.
+  const touched = useRef(!!initialId);
+  const pendingVibe = useRef(autoVibe);
+  const hint = useRef(vibeHint);
+  // Title/subtitle we generated last time — only those (or empty ones) may be replaced on a restyle.
+  const autoText = useRef<{ title?: string; subtitle?: string }>({});
+  const cRef = useRef(c);
+  cRef.current = c;
 
   const update = useCallback((fn: (d: C) => C) => {
     setC(fn);
     setDirty(true);
   }, []);
   const setTop = (p: Partial<C>) => update((d) => ({ ...d, ...p }));
-  const setTape = (p: Partial<C["tape"]>) => update((d) => ({ ...d, tape: { ...d.tape, ...p } }));
-  const setCover = (p: Partial<C["cover"]>) => update((d) => ({ ...d, cover: { ...d.cover, ...p } }));
-  const setInside = (p: Partial<C["inside"]>) => update((d) => ({ ...d, inside: { ...d.inside, ...p } }));
-  const setLayers = useCallback(
-    (s: SurfaceKey, fn: (l: Layer[]) => Layer[]) => update((d) => ({ ...d, layers: { ...d.layers, [s]: fn(d.layers[s]) } })),
+  const design = useCallback(
+    (fn: (d: C) => C) => {
+      touched.current = true;
+      update(fn);
+    },
     [update],
   );
+  const setTape = (p: Partial<C["tape"]>) => design((d) => ({ ...d, tape: { ...d.tape, ...p } }));
+  const setCover = (p: Partial<C["cover"]>) => design((d) => ({ ...d, cover: { ...d.cover, ...p } }));
+  const setInside = (p: Partial<C["inside"]>) => design((d) => ({ ...d, inside: { ...d.inside, ...p } }));
+  const setLayers = useCallback(
+    (s: SurfaceKey, fn: (l: Layer[]) => Layer[]) => design((d) => ({ ...d, layers: { ...d.layers, [s]: fn(d.layers[s]) } })),
+    [design],
+  );
+
+  const textOptions = (d: C) => ({
+    replaceTitle: !d.title.trim() || d.title === autoText.current.title,
+    replaceSubtitle: !d.cover.subtitle.trim() || d.cover.subtitle === autoText.current.subtitle,
+  });
+
+  /**
+   * Generate a design. "guess" reads the songs' mood; a vibe steers the mood; "shuffle" keeps the mood
+   * and only re-rolls the choices. Colors always come from the songs' own artwork. Offers an undo.
+   */
+  async function applyVibe(how: { guess: true } | { vibe: VibeKey } | { shuffle: true }) {
+    setVibeBusy(true);
+    const before = cRef.current;
+    try {
+      const art = await thumbColors(before.tracks.map((t) => t.videoId));
+      const mood: Mood =
+        "vibe" in how
+          ? moodForVibe(how.vibe, before.mood)
+          : "shuffle" in how && before.mood
+            ? before.mood
+            : await guessMood(before.tracks, hint.current, art);
+      const seed = Math.floor(Math.random() * 1e9);
+      update((d) => {
+        const next = designFromMood(d, mood, art, seed, textOptions(d));
+        autoText.current = { title: next.title, subtitle: next.cover.subtitle };
+        return next;
+      });
+      notify(`✨ Styled: ${describeMood(mood)}`, true, { label: "Undo", run: () => update(() => before) });
+    } finally {
+      setVibeBusy(false);
+    }
+  }
+
+  function makePlain() {
+    const before = cRef.current;
+    update((d) => plainDesign(d, defaultCassette(), textOptions(d)));
+    notify("Back to the plain design", true, { label: "Undo", run: () => update(() => before) });
+  }
+
+  async function setCoverArt(mode: CoverMode) {
+    if (mode === "pattern") return setCover({ photo: null });
+    setVibeBusy(true);
+    try {
+      const ids = cRef.current.tracks.map((t) => t.videoId);
+      // A collage of one song repeated looks odd — use the top song's art until there are 4.
+      const collage = mode === "collage" && ids.length >= 4;
+      if (mode === "collage" && !collage) notify("Collage needs 4 songs — using the top song's art for now");
+      const photo = await songArtCover(ids, collage ? "collage" : "single");
+      setCover({ photo, photoZoom: 1, photoX: 50, photoY: 50, ink: "#fffaf0" });
+    } catch (e) {
+      notify(e instanceof Error && e.message.startsWith("Add") ? e.message : "Couldn't load the song art. Try again.");
+    } finally {
+      setVibeBusy(false);
+    }
+  }
+
+  // Run the automatic vibe once the first songs land.
+  useEffect(() => {
+    if (pendingVibe.current && c.tracks.length) {
+      pendingVibe.current = false;
+      applyVibe({ guess: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c.tracks.length]);
 
   const layers = c.layers[surface];
   const selectedLayer = layers.find((l) => l.id === selected) ?? null;
@@ -118,8 +238,10 @@ export function Editor({ initial, id: initialId, editKey: initialKey }: { initia
     goSurface(other[surface]);
   }
 
-  function onImported(r: { kind: string; title: string; tracks: Parameters<typeof mergeTracks>[1] }) {
+  function onImported(r: Imported) {
+    hint.current += ` ${r.query ?? (r.kind === "playlist" ? r.title : "")}`;
     const res = mergeTracks(c.tracks, r.tracks);
+    if (!c.tracks.length && !touched.current) pendingVibe.current = true;
     update((d) => ({
       ...d,
       title: d.title || (r.kind === "playlist" ? r.title.slice(0, LIMITS.title) : d.title),
@@ -259,14 +381,34 @@ export function Editor({ initial, id: initialId, editKey: initialKey }: { initia
 
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 pb-16 lg:grid-cols-[minmax(0,1fr)_420px]">
         <section className="max-lg:sticky max-lg:top-0 max-lg:z-20 max-lg:-mx-4 max-lg:bg-cream/95 max-lg:px-4 max-lg:pb-3 max-lg:pt-1 max-lg:backdrop-blur lg:sticky lg:top-4 lg:self-start lg:pt-2">
-          <div className="mb-3 flex flex-wrap items-center gap-1.5">
-            {(Object.keys(SURFACE_LABELS) as SurfaceKey[]).map((s) => (
-              <button key={s} className="chip text-xs sm:text-sm" data-on={s === surface} onClick={() => goSurface(s)}>
-                {SURFACE_LABELS[s]}
-              </button>
-            ))}
-            <button className="btn btn-dark btn-sm ml-auto" onClick={flip} title="Flip to see the other side">
-              ↻ Flip
+          <VibeBar
+            vibe={c.vibe}
+            moodText={c.mood ? describeMood(c.mood) : undefined}
+            busy={vibeBusy}
+            hasPhoto={!!c.cover.photo}
+            onPick={(v) => applyVibe(v ? { vibe: v } : { guess: true })}
+            onShuffle={() => applyVibe(c.mood ? { shuffle: true } : { guess: true })}
+            onPlain={makePlain}
+            onCover={setCoverArt}
+          />
+          {/* One row on phones (scrolls sideways) so the pinned preview stays compact. */}
+          <div className="mb-3 flex items-center gap-1.5">
+            <div className="-my-1 flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-1 max-sm:[scrollbar-width:none] sm:flex-wrap">
+              {(Object.keys(SURFACE_LABELS) as SurfaceKey[]).map((s) => (
+                <button
+                  key={s}
+                  className="chip shrink-0 whitespace-nowrap text-xs max-sm:px-2 sm:text-sm"
+                  data-on={s === surface}
+                  onClick={() => goSurface(s)}
+                  aria-label={SURFACE_LABELS[s]}
+                >
+                  <span className="sm:hidden">{SURFACE_SHORT_LABELS[s]}</span>
+                  <span className="max-sm:hidden">{SURFACE_LABELS[s]}</span>
+                </button>
+              ))}
+            </div>
+            <button className="btn btn-dark btn-sm shrink-0" onClick={flip} title="Flip to see the other side" aria-label="Flip">
+              ↻<span className="max-sm:hidden"> Flip</span>
             </button>
           </div>
           <div className="mx-auto max-w-[760px] max-lg:max-w-[min(100%,calc(42dvh*1.6))] lg:px-6">
@@ -352,6 +494,17 @@ export function Editor({ initial, id: initialId, editKey: initialKey }: { initia
           }`}
         >
           {toast.text}
+          {toast.action && (
+            <button
+              className="ml-3 underline"
+              onClick={() => {
+                toast.action!.run();
+                setToast(null);
+              }}
+            >
+              {toast.action.label}
+            </button>
+          )}
         </div>
       )}
 

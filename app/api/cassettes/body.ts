@@ -2,14 +2,34 @@ import { NextResponse } from "next/server";
 import { CassetteInputSchema, formatIssues, type CassetteInput } from "@/lib/schema";
 import { LIMITS } from "@/lib/constants";
 
+/** Read a request body as text, or null once it exceeds `max` bytes. */
+async function readLimited(req: Request, max: number): Promise<string | null> {
+  if (!req.body) return "";
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks));
+}
+
 // Reads and validates a cassette from a request body; returns either data or an error response.
 export async function readCassetteBody(req: Request): Promise<{ data: CassetteInput } | { error: NextResponse }> {
   const len = Number(req.headers.get("content-length") || 0);
   if (len > LIMITS.bodyBytes) {
     return { error: NextResponse.json({ error: "Your mixtape is too big. Try fewer or smaller photos." }, { status: 413 }) };
   }
-  const text = await req.text();
-  if (text.length > LIMITS.bodyBytes) {
+  // Stream the body and stop as soon as it passes the limit (chunked uploads have no length header).
+  const text = await readLimited(req, LIMITS.bodyBytes);
+  if (text === null) {
     return { error: NextResponse.json({ error: "Your mixtape is too big. Try fewer or smaller photos." }, { status: 413 }) };
   }
   let json: unknown;

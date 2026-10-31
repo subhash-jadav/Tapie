@@ -253,7 +253,7 @@ export function CoverArt({ c }: { c: C }) {
             fontSize: fitLine(title.length, cv.font, 520, 26, 64),
             lineHeight: 1.05,
             color: cv.ink,
-            textShadow: cv.photo ? "0 2px 10px rgba(0,0,0,.35)" : "3px 3px 0 rgba(0,0,0,.18)",
+            textShadow: cv.photo ? "0 2px 10px rgba(0,0,0,.35)" : "0 1px 2px rgba(0,0,0,.12)",
             whiteSpace: "nowrap",
             overflow: "hidden",
           }}
@@ -300,7 +300,7 @@ function MiniTracklist({ tracks, font, ink }: { tracks: Track[]; font: C["inside
     </div>
   );
   const head = (s: string) => (
-    <div style={{ fontFamily: FONTS.bungee.css, fontSize: size * 0.85, letterSpacing: 1, opacity: 0.85, lineHeight: 1.3 }}>{s}</div>
+    <div style={{ fontFamily: FONTS.typewriter.css, fontSize: size * 0.8, letterSpacing: 3, opacity: 0.7, lineHeight: 1.5 }}>{s}</div>
   );
   return (
     <div style={{ fontFamily: FONTS[font].css, fontSize: size, color: ink }}>

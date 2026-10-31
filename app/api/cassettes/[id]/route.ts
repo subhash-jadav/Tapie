@@ -29,6 +29,9 @@ export async function PUT(req: Request, ctx: Ctx) {
 
 export async function DELETE(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
+  if (!rateLimit(`delete:${clientIp(req)}`, 30, 10 * 60_000)) {
+    return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+  }
   const result = await deleteCassette(id, req.headers.get("x-edit-key") ?? "");
   if (result === "notfound") return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (result === "forbidden") return NextResponse.json({ error: "This edit link isn't valid." }, { status: 403 });

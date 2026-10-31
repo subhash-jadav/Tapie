@@ -15,10 +15,13 @@ export function rateLimit(key: string, limit: number, windowMs: number): boolean
   return b.n <= limit;
 }
 
+// Forwarding headers can be forged by anyone, so they are only trusted behind a known proxy
+// (Vercel, or TRUST_PROXY=1 when behind your own reverse proxy that sets them).
+const TRUST_PROXY = process.env.TRUST_PROXY === "1" || process.env.VERCEL === "1";
+
 export function clientIp(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    req.headers.get("x-real-ip") ||
-    "local"
-  );
+  if (!TRUST_PROXY) return "direct"; // one shared bucket — safe, if strict, without a proxy
+  // Proxies append to X-Forwarded-For; the right-most entry was added by our proxy, not the client.
+  const xff = req.headers.get("x-forwarded-for")?.split(",").map((s) => s.trim()).filter(Boolean);
+  return xff?.at(-1) || req.headers.get("x-real-ip") || "unknown";
 }

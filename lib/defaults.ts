@@ -1,4 +1,5 @@
 import type { CassetteInput } from "./schema";
+import { GRAIN } from "./patterns";
 
 export function defaultCassette(): CassetteInput {
   return {
@@ -42,6 +43,11 @@ export const SCENE_STYLES: Record<CassetteInput["scene"], { label: string; bg: s
     label: "Bedroom floor",
     bg: "radial-gradient(circle at 20% 10%, #fff6e2 0, transparent 40%), radial-gradient(circle at 90% 80%, #f6d9b0 0, transparent 45%), #f4ead5",
     fg: "#2b2118",
+  },
+  noir: {
+    label: "Noir",
+    bg: `${GRAIN}, radial-gradient(ellipse at 50% 20%, #2b2424 0%, #121010 60%, #080707 100%)`,
+    fg: "#efe6d6",
   },
   sunset: {
     label: "Sunset drive",

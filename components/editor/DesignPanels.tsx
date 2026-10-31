@@ -216,7 +216,7 @@ export function SharePanel({
       {shareUrl && editUrl && <LinkBoxes shareUrl={shareUrl} editUrl={editUrl} />}
       {onDelete && (
         <button
-          className="mt-6 text-sm text-cherry underline"
+          className="mt-6 py-2 text-sm text-cherry underline"
           onClick={() => confirm("Delete this mixtape forever? The link will stop working.") && onDelete()}
         >
           Delete this mixtape

@@ -4,7 +4,8 @@ import { LIMITS } from "@/lib/constants";
 import type { Track } from "@/lib/schema";
 import { formatTime, uid } from "@/lib/client";
 
-type Imported = { kind: "video" | "playlist"; title: string; tracks: Omit<Track, "id" | "side">[] };
+// `query` is the search text a song was found with — a hint for vibe detection.
+export type Imported = { kind: "video" | "playlist"; title: string; tracks: Omit<Track, "id" | "side">[]; query?: string };
 
 export async function importLink(url: string): Promise<Imported> {
   const res = await fetch("/api/youtube", {
@@ -109,7 +110,7 @@ export function SongInput({
   }
 
   function add(r: Result) {
-    onImported({ kind: "video", title: r.title, tracks: [r] });
+    onImported({ kind: "video", title: r.title, tracks: [r], query: text.trim() });
     setAdded((a) => new Set(a).add(r.videoId));
   }
 
@@ -121,7 +122,7 @@ export function SongInput({
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/40">{link ? "🔗" : "🔍"}</span>
           <input
             className={`input pl-9 ${size}`}
-            placeholder="Search a song, or paste a YouTube / playlist link"
+            placeholder="Song name or YouTube link"
             value={text}
             onChange={(e) => setText(e.target.value)}
             autoFocus={big}

@@ -155,3 +155,24 @@ body {
   }
   .swatch[data-on="true"] { @apply border-ink scale-110; box-shadow: 0 0 0 2px var(--color-paper), 0 0 0 4px var(--color-ink); }
 }
+
+/* Dark player for moody backdrops */
+.device-dark {
+  background: linear-gradient(160deg, #2c2727 0%, #161313 100%);
+  box-shadow: 6px 6px 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -4px 0 rgba(0, 0, 0, 0.3);
+}
+.device-dark .lcd {
+  background: radial-gradient(ellipse at 30% 0%, #2a1d0c 0%, #140d05 75%);
+  color: #ffb547;
+  text-shadow: 0 0 6px rgba(255, 181, 71, 0.45);
+}
+.device-dark .hw-btn {
+  background: linear-gradient(180deg, #3b3535, #211d1d);
+  color: #efe6d6;
+  border-color: #000;
+  box-shadow: 0 4px 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.device-dark .hw-btn-primary { background: linear-gradient(180deg, #e0a04a, #b9741f); color: #160f06; }
+.device-dark .vol { background: rgba(239, 230, 214, 0.2); }
+.device-dark .vol::-webkit-slider-thumb { border-color: #000; background: #e0a04a; }
+.device-dark .speaker { background-image: radial-gradient(rgba(0, 0, 0, 0.75) 1.6px, transparent 2px); }

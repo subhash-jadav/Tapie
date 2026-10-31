@@ -1,5 +1,5 @@
 "use client";
-import type { ReactNode, RefObject } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { formatTime } from "@/lib/client";
 
 const SEGMENTS = 24;
@@ -20,8 +20,26 @@ function Svg({ children, size = 22 }: { children: ReactNode; size?: number }) {
   );
 }
 
+/** Scrolls the title only when it doesn't fit the screen (measured, so it adapts to phone widths). */
 function Marquee({ text }: { text: string }) {
-  if (text.length <= 22) return <span className="block truncate">{text}</span>;
+  const box = useRef<HTMLSpanElement>(null);
+  const [overflows, setOverflows] = useState(false);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const measure = () => setOverflows(el.scrollWidth > el.clientWidth + 1);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [text]);
+  if (!overflows) {
+    return (
+      <span ref={box} className="block overflow-hidden whitespace-nowrap">
+        {text}
+      </span>
+    );
+  }
   return (
     <span className="block overflow-hidden whitespace-nowrap">
       <span className="marquee" style={{ animationDuration: `${Math.max(8, text.length * 0.35)}s` }}>
@@ -55,6 +73,8 @@ export type RetroPlayerProps = {
   onFlipSide: () => void;
   onVolume: (v: number) => void;
   onShowVideo: (v: boolean) => void;
+  /** Charcoal body + amber screen for dark backdrops. */
+  dark?: boolean;
 };
 
 /** A cute walkman-style player. The YouTube embed stays mounted (it provides the audio) but hidden unless asked for. */
@@ -65,8 +85,8 @@ export function RetroPlayer(p: RetroPlayerProps) {
   const status = !p.ready ? "LOADING" : p.buffering ? "BUFFER" : p.playing ? "▶ PLAY" : p.started ? "❚❚ PAUSE" : "■ STOP";
 
   return (
-    <div className="device relative mx-auto w-full max-w-md rounded-[28px] border-2 border-ink p-4 text-ink sm:p-5">
-      <div className="mb-3 flex items-center justify-between px-1 font-type text-[11px] tracking-[.2em] text-ink/60">
+    <div className={`device relative mx-auto w-full max-w-md rounded-[28px] border-2 p-4 sm:p-5 ${p.dark ? "device-dark border-black text-paper" : "border-ink text-ink"}`}>
+      <div className="mb-3 flex items-center justify-between px-1 font-type text-[11px] tracking-[.2em] opacity-60">
         <span>TAPIE · MX-90</span>
         <span className="flex items-center gap-1.5">
           <span className={`h-2 w-2 rounded-full transition ${p.playing ? "bg-cherry shadow-[0_0_8px_#d1495b]" : "bg-ink/25"}`} />
@@ -143,7 +163,7 @@ export function RetroPlayer(p: RetroPlayerProps) {
 
       {/* Volume, side switch, video */}
       <div className="mt-5 flex items-center gap-3">
-        <label className="flex min-w-0 flex-1 items-center gap-2 font-type text-xs tracking-widest text-ink/70">
+        <label className="flex min-w-0 flex-1 items-center gap-2 font-type text-xs tracking-widest opacity-70">
           VOL
           <input
             type="range"
@@ -155,11 +175,11 @@ export function RetroPlayer(p: RetroPlayerProps) {
             aria-label="Volume"
           />
         </label>
-        <div className="flex shrink-0 overflow-hidden rounded-full border-2 border-ink font-type text-xs" role="group" aria-label="Tape side">
+        <div className={`flex shrink-0 overflow-hidden rounded-full border-2 font-type text-xs ${p.dark ? "border-paper/40" : "border-ink"}`} role="group" aria-label="Tape side">
           {(["A", "B"] as const).map((s) => (
             <button
               key={s}
-              className={`px-2.5 py-1 transition ${s === p.side ? "bg-ink text-paper" : "bg-paper"}`}
+              className={`px-2.5 py-1 transition ${s === p.side ? (p.dark ? "bg-paper text-ink" : "bg-ink text-paper") : p.dark ? "bg-transparent" : "bg-paper"}`}
               onClick={() => s !== p.side && p.onFlipSide()}
               disabled={!p.ready || (s !== p.side && !p.hasOtherSide)}
               aria-pressed={s === p.side}
@@ -169,7 +189,7 @@ export function RetroPlayer(p: RetroPlayerProps) {
           ))}
         </div>
         <button
-          className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-ink text-sm transition ${p.showVideo ? "bg-ink text-paper" : "bg-paper"}`}
+          className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 text-sm transition ${p.dark ? "border-paper/40" : "border-ink"} ${p.showVideo ? (p.dark ? "bg-paper text-ink" : "bg-ink text-paper") : p.dark ? "bg-transparent" : "bg-paper"}`}
           onClick={() => p.onShowVideo(!p.showVideo)}
           title={p.showVideo ? "Hide video" : "Show video"}
           aria-pressed={p.showVideo}
