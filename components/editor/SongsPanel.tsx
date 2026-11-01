@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { animateOut, useFlip } from "@/lib/motion";
+import { animateOut, startDrag, useFlip } from "@/lib/motion";
 import { sfx } from "@/lib/sfx";
 import { LIMITS } from "@/lib/constants";
 import type { Track } from "@/lib/schema";
@@ -222,6 +222,16 @@ export function SongsPanel({
     onChange(next);
   }
 
+  /** Dropped by drag: reorder within its side, leaving the other side untouched. */
+  function dropAt(id: string, to: number) {
+    const side = tracks.find((t) => t.id === id)!.side;
+    const list = tracks.filter((t) => t.side === side && t.id !== id);
+    list.splice(to, 0, tracks.find((t) => t.id === id)!);
+    let k = 0;
+    onChange(tracks.map((t) => (t.side === side ? list[k++] : t)));
+    sfx("pop");
+  }
+
   return (
     <div>
       <SongInput onImported={onImported} existing={new Set(tracks.map((t) => t.videoId))} />
@@ -255,6 +265,14 @@ export function SongsPanel({
                   className="row-in flex items-center gap-2 rounded-xl border-2 border-ink/15 bg-field p-1.5"
                   style={{ animationDelay: `${Math.min(i, 12) * 25}ms` }}
                 >
+                  <span
+                    className="grid h-9 w-5 shrink-0 cursor-grab touch-none select-none place-items-center text-ink/35 hover:text-ink active:cursor-grabbing"
+                    onPointerDown={(e) => startDrag(e, dropAt)}
+                    title="Drag to reorder"
+                    aria-hidden
+                  >
+                    ⠿
+                  </span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`https://i.ytimg.com/vi/${t.videoId}/default.jpg`} alt="" className="h-9 w-12 shrink-0 rounded-md object-cover" />
                   <div className="min-w-0 flex-1">

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { defaultCassette } from "@/lib/defaults";
 import type { CassetteInput, Track } from "@/lib/schema";
 import { formatTime } from "@/lib/client";
-import { animateOut } from "@/lib/motion";
+import { animateOut, startDrag, useFlip } from "@/lib/motion";
 import { sfx } from "@/lib/sfx";
 import { Editor, DRAFT_KEY } from "@/components/editor/Editor";
 import { SongInput, mergeTracks, splitSides, type Imported } from "@/components/editor/SongsPanel";
@@ -55,6 +55,8 @@ export default function CreatePage() {
   const [ready, setReady] = useState(false);
   const pickedRef = useRef(picked);
   pickedRef.current = picked;
+  const pickedListRef = useRef<HTMLOListElement>(null);
+  useFlip(pickedListRef, [picked.tracks.map((t) => t.id).join()]);
 
   useEffect(() => {
     let draft: CassetteInput | null = null;
@@ -90,6 +92,17 @@ export default function CreatePage() {
     }));
     const extra = [res.dupes && `${res.dupes} already picked`, res.cut && `${res.cut} didn't fit (max 100)`].filter(Boolean);
     return `Added ${res.added} song${res.added === 1 ? "" : "s"}${extra.length ? ` · ${extra.join(" · ")}` : ""}`;
+  }
+
+  /** Move a picked song to position `to` (drag), or one step up/down (buttons). */
+  function movePicked(id: string, to: number) {
+    setPicked((p) => {
+      const from = p.tracks.findIndex((t) => t.id === id);
+      if (from < 0 || to < 0 || to >= p.tracks.length || to === from) return p;
+      const next = [...p.tracks];
+      next.splice(to, 0, next.splice(from, 1)[0]);
+      return { ...p, tracks: next };
+    });
   }
 
   function removePicked(id: string, el: Element | null) {
@@ -136,8 +149,8 @@ export default function CreatePage() {
           </Link>
           <ThemeToggle />
         </header>
-        <main className={`mx-auto grid w-full max-w-5xl flex-1 grid-cols-1 gap-8 px-4 md:grid-cols-[1.1fr_1fr] md:gap-10 ${has ? "items-start pb-28 md:pb-16 md:pt-6" : "items-center pb-16"}`}>
-          <div className="pop-in">
+        <main className={`mx-auto grid w-full max-w-5xl flex-1 grid-cols-1 gap-8 px-4 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:gap-10 ${has ? "items-start pb-28 md:pb-16 md:pt-6" : "items-center pb-16"}`}>
+          <div className="pop-in min-w-0">
             <p className="mb-2 font-type text-sm tracking-widest text-orange">STEP 1 · THE SONGS</p>
             <h1 className="mb-4 font-display text-4xl leading-tight sm:text-5xl">What's on the tape?</h1>
             <p className="mb-6 text-lg text-ink/70">
@@ -174,14 +187,28 @@ export default function CreatePage() {
                   📼
                 </span>
               </div>
-              <ol className="max-h-[46dvh] overflow-y-auto p-2 md:max-h-[52dvh]">
+              <ol ref={pickedListRef} className="max-h-[46dvh] overflow-y-auto p-2 md:max-h-[52dvh]">
                 {tracks.map((t, i) => (
                   <li
                     key={t.id}
-                    className="row-in flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-ink/5"
+                    data-flip-id={t.id}
+                    className="row-in flex items-center gap-2 rounded-lg bg-paper px-1.5 py-1.5 transition-colors hover:bg-ink/5"
                     style={{ animationDelay: `${Math.min(i, 12) * 25}ms` }}
                   >
-                    <span className="w-5 shrink-0 text-right text-xs text-ink/40">{i + 1}</span>
+                    <span
+                      className="grid h-9 w-5 shrink-0 cursor-grab touch-none select-none place-items-center text-ink/35 hover:text-ink active:cursor-grabbing"
+                      onPointerDown={(e) =>
+                        startDrag(e, (id, to) => {
+                          movePicked(id, to);
+                          sfx("pop");
+                        })
+                      }
+                      title="Drag to reorder"
+                      aria-hidden
+                    >
+                      ⠿
+                    </span>
+                    <span className="w-4 shrink-0 text-right text-xs text-ink/40">{i + 1}</span>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`https://i.ytimg.com/vi/${t.videoId}/default.jpg`} alt="" className="h-9 w-12 shrink-0 rounded-md object-cover" />
                     <div className="min-w-0 flex-1">
@@ -189,6 +216,19 @@ export default function CreatePage() {
                       <div className="truncate text-xs text-ink/60">{t.artist}</div>
                     </div>
                     <span className="hidden text-xs text-ink/50 sm:block">{formatTime(t.duration)}</span>
+                    <div className="flex shrink-0 items-center">
+                      <button className="h-8 w-6 rounded text-xs text-ink/60 hover:bg-ink/5 disabled:opacity-25" disabled={i === 0} onClick={() => movePicked(t.id, i - 1)} aria-label={`Move ${t.title} up`}>
+                        ▲
+                      </button>
+                      <button
+                        className="h-8 w-6 rounded text-xs text-ink/60 hover:bg-ink/5 disabled:opacity-25"
+                        disabled={i === tracks.length - 1}
+                        onClick={() => movePicked(t.id, i + 1)}
+                        aria-label={`Move ${t.title} down`}
+                      >
+                        ▼
+                      </button>
+                    </div>
                     <button
                       className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition-colors hover:bg-cherry/10 hover:text-cherry"
                       onClick={(e) => removePicked(t.id, e.currentTarget.closest("li"))}

@@ -87,3 +87,56 @@ export function useFlip(ref: RefObject<HTMLElement | null>, deps: unknown[]) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
+
+/**
+ * Drag-to-reorder from a handle inside a [data-flip-id] item. Neighbours slide out of the way while
+ * dragging; on release `onDrop(id, toIndex)` gets the item's new index among its siblings.
+ * Works with mouse and touch (give the handle `touch-action: none`).
+ */
+export function startDrag(e: React.PointerEvent<HTMLElement>, onDrop: (id: string, toIndex: number) => void) {
+  const handle = e.currentTarget;
+  const item = handle.closest<HTMLElement>("[data-flip-id]");
+  const list = item?.parentElement;
+  if (!item || !list || e.button > 0) return;
+  e.preventDefault();
+  const items = [...list.children].filter((el): el is HTMLElement => el instanceof HTMLElement && !!el.dataset.flipId);
+  const from = items.indexOf(item);
+  const rects = items.map((el) => el.getBoundingClientRect());
+  const gap = from < items.length - 1 ? rects[from + 1].top - rects[from].bottom : from > 0 ? rects[from].top - rects[from - 1].bottom : 0;
+  const shift = rects[from].height + gap;
+  const startY = e.clientY;
+  let to = from;
+
+  handle.setPointerCapture(e.pointerId);
+  Object.assign(item.style, { position: "relative", zIndex: "20", boxShadow: "0 10px 24px rgb(0 0 0 / .2)" });
+  for (const el of items) if (el !== item) el.style.transition = "transform 160ms ease";
+
+  const move = (ev: PointerEvent) => {
+    const dy = ev.clientY - startY;
+    item.style.transform = `translateY(${dy}px) scale(1.02)`;
+    const center = rects[from].top + rects[from].height / 2 + dy;
+    to = rects.filter((r, i) => i !== from && r.top + r.height / 2 < center).length;
+    items.forEach((el, i) => {
+      if (i === from) return;
+      const s = from < to && i > from && i <= to ? -shift : from > to && i >= to && i < from ? shift : 0;
+      el.style.transform = s ? `translateY(${s}px)` : "";
+    });
+  };
+  const end = () => {
+    handle.removeEventListener("pointermove", move);
+    handle.removeEventListener("pointerup", end);
+    handle.removeEventListener("pointercancel", end);
+    const droppedTop = item.getBoundingClientRect().top;
+    for (const el of items) Object.assign(el.style, { transition: "", transform: "", position: "", zIndex: "", boxShadow: "" });
+    if (to !== from) onDrop(item.dataset.flipId!, to);
+    // Neighbours are already where they belong, so drop the FLIP glide and just settle the dragged item.
+    requestAnimationFrame(() => {
+      for (const el of items) el.getAnimations().forEach((a) => a.cancel());
+      const dy = droppedTop - item.getBoundingClientRect().top;
+      if (Math.abs(dy) > 1 && !reducedMotion()) item.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 200, easing: EASE_OUT });
+    });
+  };
+  handle.addEventListener("pointermove", move);
+  handle.addEventListener("pointerup", end);
+  handle.addEventListener("pointercancel", end);
+}
