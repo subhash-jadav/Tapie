@@ -196,20 +196,35 @@ export async function importFromYouTube(input: string): Promise<ImportResult> {
 
 const searchCache = new Map<string, { at: number; tracks: ImportedTrack[] }>();
 
+/**
+ * Fetches the results page's data. YouTube occasionally stalls or returns an odd page, so a failed
+ * first try gets one quick retry. A successful first try returns straight away (no added time), and
+ * both tries together stay under the old single 10 s timeout.
+ */
+async function fetchSearchData(q: string): Promise<RegExpMatchArray> {
+  // sp=EgIQAQ== limits results to videos (no channels, playlists or shorts shelves).
+  const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}&sp=EgIQAQ%253D%253D&hl=en`;
+  const deadline = Date.now() + 9_500;
+  for (let attempt = 1; ; attempt++) {
+    const last = attempt === 2;
+    try {
+      const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(last ? Math.max(1_000, deadline - Date.now()) : 5_000) });
+      const m = res.ok ? (await res.text()).match(/var ytInitialData = (\{.*?\});<\/script>/s) : null;
+      if (m) return m;
+      if (last) throw new YouTubeError("Search isn't working right now. Try pasting a link.");
+    } catch (e) {
+      if (last) throw e;
+    }
+  }
+}
+
 /** Search YouTube videos by text (reads the public results page, no API key). */
 export async function searchYouTube(query: string): Promise<ImportedTrack[]> {
   const q = query.trim().toLowerCase().replace(/\s+/g, " ");
   const hit = searchCache.get(q);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.tracks;
 
-  // sp=EgIQAQ== limits results to videos (no channels, playlists or shorts shelves).
-  const res = await fetch(`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}&sp=EgIQAQ%253D%253D&hl=en`, {
-    headers: HEADERS,
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!res.ok) throw new YouTubeError("Search isn't working right now. Try pasting a link.");
-  const m = (await res.text()).match(/var ytInitialData = (\{.*?\});<\/script>/s);
-  if (!m) throw new YouTubeError("Search isn't working right now. Try pasting a link.");
+  const m = await fetchSearchData(q);
 
   const seen = new Set<string>();
   const tracks = readItems(JSON.parse(m[1]), ["videoRenderer", "lockupViewModel"])
