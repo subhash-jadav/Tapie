@@ -1,14 +1,13 @@
 // Shared between server (validation) and client (editor/rendering).
 
-export const APP_VERSION = "1.3.3";
+// Semantic versioning MAJOR.MINOR.PATCH: breaking change / new feature / fix. Keep in sync with package.json.
+export const APP_VERSION = "1.8.1";
 
-// Shown in the ⓘ About popup — keep it short and update it with every release.
-export const RELEASE_NOTES = [
-  "Share any tape straight from its page ↗",
-  "Tapes and photos now live in the cloud",
-  "iPhone: a simple mute button (iOS controls volume)",
-  "Pick all your songs first, then start designing",
-  "Smoother animations & soft sounds (🔊/🔇)",
+// Shown in the ⓘ About popup under "What's inside": Tapie's best bits, not a changelog.
+export const HIGHLIGHTS = [
+  "Auto design that matches your songs' mood",
+  "Photos, stickers & a note inside the case",
+  "Share with one link, plays side A & B",
 ];
 
 export const W = 640;

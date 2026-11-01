@@ -1,6 +1,6 @@
 {
   "name": "tapie",
-  "version": "1.3.3",
+  "version": "1.8.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
