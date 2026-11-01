@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { connection } from "next/server";
+import { Analytics } from "@vercel/analytics/next";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { fontVariables } from "./fonts";
 import "./globals.css";
@@ -28,7 +29,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Constant script (no user data), allowed by the CSP nonce: applies the saved theme before first paint. */}
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Vercel Web Analytics: cookie-free page views, loaded after the page. */}
+        <Analytics />
+      </body>
     </html>
   );
 }
