@@ -123,7 +123,7 @@ export function SharedTape({ c }: { c: Cassette }) {
     >
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-4">
         <Link href="/" className="font-display text-2xl">
-          Tapie<span className="text-orange">.</span>
+          Tapiee<span className="text-orange">.</span>
         </Link>
         <div className="flex items-center gap-1.5 sm:gap-2">
           {viewer && (

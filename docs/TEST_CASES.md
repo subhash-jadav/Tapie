@@ -1,4 +1,4 @@
-# Tapie — Test Cases & Results
+# Tapiee — Test Cases & Results
 
 Test plan and results for tapie: functional, screen-size (responsive) and security tests.
 

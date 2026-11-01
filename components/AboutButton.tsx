@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { APP_VERSION, HIGHLIGHTS } from "@/lib/constants";
 
-/** ⓘ button with a small "about Tapie" card: a note from the maker and the version. */
+/** ⓘ button with a small "about Tapiee" card: a note from the maker and the version. */
 export function AboutButton() {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -26,26 +26,26 @@ export function AboutButton() {
         type="button"
         className="grid h-8 w-8 place-items-center rounded-full border-2 border-ink bg-paper font-type text-sm transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] hover:-translate-y-0.5 active:scale-90"
         onClick={() => setOpen((o) => !o)}
-        aria-label="About Tapie"
+        aria-label="About Tapiee"
         aria-expanded={open}
-        title="About Tapie"
+        title="About Tapiee"
       >
         i
       </button>
       {open && (
         <div
           role="dialog"
-          aria-label="About Tapie"
+          aria-label="About Tapiee"
           className="pop-in absolute right-0 top-10 z-50 w-72 max-sm:fixed max-sm:inset-x-4 max-sm:top-16 max-sm:w-auto rounded-2xl border-2 border-ink bg-paper p-4 text-left text-ink shadow-[4px_4px_0_var(--color-shadow)]"
         >
           <div className="mb-2 flex items-baseline justify-between">
             <span className="font-display text-lg">
-              Tapie<span className="text-orange">.</span>
+              Tapiee<span className="text-orange">.</span>
             </span>
             <span className="font-type text-xs text-ink/60">v{APP_VERSION}</span>
           </div>
           <p className="text-sm leading-relaxed text-ink/80">
-            Hey! I made Tapie so sending songs to someone feels special again — not just another link in the chat. Hope you
+            Hey! I made Tapiee so sending songs to someone feels special again — not just another link in the chat. Hope you
             make someone smile.
           </p>
           <p className="mt-3 text-right font-hand text-base">— Shubh ♡</p>

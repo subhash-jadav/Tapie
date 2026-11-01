@@ -1,9 +1,9 @@
 // Shared between server (validation) and client (editor/rendering).
 
 // Semantic versioning MAJOR.MINOR.PATCH: breaking change / new feature / fix. Keep in sync with package.json.
-export const APP_VERSION = "1.10.0";
+export const APP_VERSION = "1.11.0";
 
-// Shown in the ⓘ About popup under "What's inside": Tapie's best bits, not a changelog.
+// Shown in the ⓘ About popup under "What's inside": Tapiee's best bits, not a changelog.
 export const HIGHLIGHTS = [
   "Auto design that matches your songs' mood",
   "Photos, stickers & a note inside the case",

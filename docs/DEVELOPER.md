@@ -1,4 +1,4 @@
-# Tapie — Developer Guide
+# Tapiee — Developer Guide
 
 Technical reference for people working on the tapie codebase: how it is built, how data flows, and how to run, test and deploy it.
 

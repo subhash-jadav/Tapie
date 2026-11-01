@@ -17,7 +17,7 @@ export default function Home() {
     <div className="overflow-x-clip">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <span className="font-display text-2xl">
-          Tapie<span className="text-orange">.</span>
+          Tapiee<span className="text-orange">.</span>
         </span>
         <div className="flex items-center gap-3">
           <ThemeToggle />

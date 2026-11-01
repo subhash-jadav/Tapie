@@ -89,7 +89,7 @@ export function RetroPlayer(p: RetroPlayerProps) {
   return (
     <div className={`theme-classic device relative mx-auto w-full max-w-md rounded-[28px] border-2 p-4 sm:p-5 ${p.dark ? "device-dark border-black text-paper" : "border-ink text-ink"}`}>
       <div className="mb-3 flex items-center justify-between px-1 font-type text-[11px] tracking-[.2em] opacity-60">
-        <span>TAPIE · MX-90</span>
+        <span>TAPIEE · MX-90</span>
         <span className="flex items-center gap-1.5">
           <span className={`h-2 w-2 rounded-full transition ${p.playing ? "bg-cherry shadow-[0_0_8px_#d1495b]" : "bg-ink/25"}`} />
           STEREO

@@ -145,7 +145,7 @@ export default function CreatePage() {
       <div className="flex min-h-dvh flex-col">
         <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
           <Link href="/" className="font-display text-2xl">
-            Tapie<span className="text-orange">.</span>
+            Tapiee<span className="text-orange">.</span>
           </Link>
           <ThemeToggle />
         </header>

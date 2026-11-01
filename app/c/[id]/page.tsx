@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const c = await getCassette(id);
   if (!c) return { title: "Mixtape not found" };
-  const title = `${c.title} — a mixtape${c.from ? ` from ${c.from}` : ""} · Tapie`;
+  const title = `${c.title} — a mixtape${c.from ? ` from ${c.from}` : ""} · Tapiee`;
   const description = `${c.tracks.length} songs: ${c.tracks
     .slice(0, 4)
     .map((t) => t.title)
